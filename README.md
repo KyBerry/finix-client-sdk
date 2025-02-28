@@ -1,7 +1,7 @@
 # Finix Client SDK
 
 [![npm version](https://img.shields.io/npm/v/@kyberry/finix-client-sdk.svg)](https://www.npmjs.com/package/@kyberry/finix-client-sdk)
-[![license](https://img.shields.io/npm/l/@kyberry/finix-client-sdk.svg)](https://github.com/KyBerry/finix-client-sdk/blob/main/LICENSE)
+[![license](https://img.shields.io/npm/l/@kyberry/finix-client-sdk.svg)](https://github.com/KyBerry/finix-client-sdk/blob/ee64724b13eb6cc6173c23652e7349a413f89adf/LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-4.9%2B-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18%2B-61dafb)](https://reactjs.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-13%2B-black)](https://nextjs.org/)
@@ -519,7 +519,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/KyBerry/finix-client-sdk/blob/main/LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/KyBerry/finix-client-sdk/blob/ee64724b13eb6cc6173c23652e7349a413f89adf/LICENSE) file for details.
 
 ## Disclaimer
 
