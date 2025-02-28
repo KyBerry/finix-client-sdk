@@ -1,0 +1,32 @@
+{
+  "name": "@kyberry/finix-client-sdk",
+  "version": "0.1.0",
+  "description": "Modern client SDK for Finix Payments",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KyBerry/finix-client-sdk.git"
+  },
+  "keywords": [
+    "finix",
+    "payments",
+    "credit card",
+    "tokenization",
+    "bank account",
+    "react",
+    "nextjs"
+  ],
+  "author": "Kyle Berry",
+  "license": "MIT"
+}

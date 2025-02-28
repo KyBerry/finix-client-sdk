@@ -1,0 +1,4 @@
+{
+  "extends": "@kyberry/typescript-config/base.json"
+}
+

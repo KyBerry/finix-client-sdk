@@ -1,0 +1,1 @@
+export * from "@kyberry/ui/tailwind.config";
