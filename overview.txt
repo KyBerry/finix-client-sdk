@@ -1,0 +1,54 @@
+finix-sdk/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml          # CI/CD pipeline
+│       └── release.yml     # Automated publishing
+├── docs/                   # Generated TypeDoc documentation
+├── examples/               # Example implementations
+│   ├── basic-usage/
+│   └── react-integration/
+├── scripts/                # Build/deploy scripts
+│   ├── build.ts
+│   └── generate-docs.ts
+├── src/
+│   ├── core/
+│   │   ├── finix.ts        # Main SDK class
+│   │   ├── config.ts       # Configuration management
+│   │   └── api-client.ts   # HTTP client wrapper
+│   ├── components/
+│   │   ├── base-form.ts    # Abstract FormController
+│   │   ├── card-form.ts
+|   |   ├── bank-form.ts
+│   │   └── input-element.ts
+│   ├── security/
+│   │   ├── csp.ts          # CSP nonce management
+│   │   └── origin-validator.ts
+│   ├── errors/
+│   │   ├── base-error.ts
+│   │   ├── config-error.ts
+│   │   └── network-error.ts
+│   ├── types/              # Public TypeScript interfaces
+│   │   ├── config.d.ts
+│   │   └── public-api.d.ts
+│   ├── utils/
+│   │   ├── script-loader.ts
+│   │   ├── validation.ts
+│   │   └── logger.ts       # Secure logging
+│   ├── internal/           # Private implementation details
+│   │   ├── constants.ts
+│   │   └── types.ts        # Internal types
+│   └── index.ts            # Public API entry point
+├── tests/
+│   ├── unit/
+│   │   ├── core/
+│   │   └── payment-forms/
+│   ├── integration/
+│   ├── mocks/
+│   └── test-utils.ts
+├── .eslintrc               # Linting rules
+├── .gitignore
+├── package.json
+├── rollup.config.js        # Production builds
+├── tsconfig.json           # TypeScript config
+├── tsconfig.build.json     # Build-specific settings
+└── README.md               # Project documentation

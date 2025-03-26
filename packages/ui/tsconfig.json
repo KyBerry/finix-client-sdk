@@ -4,7 +4,7 @@
     //"outDir": "dist"
     "baseUrl": ".",
     "paths": {
-      "@workspace/ui/*": ["./src/*"]
+      "@kyberry/ui/*": ["./src/*"]
     }
   },
   "include": ["."],
