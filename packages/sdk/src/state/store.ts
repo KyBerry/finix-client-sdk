@@ -1,37 +1,47 @@
 /**
- * Defines a reducer function that accepts the current state and an action,
- * then returns a new state based on the action.
- * This is the core of our state management architecture.
+ * Type definitions for the Store
  */
-export type Reducer<TState, TActions = unknown> = (state: TState, action: TActions) => TState;
+
+/**
+ * A reducer function that accepts the current state and an action,
+ * then returns a new state.
+ */
+export type Reducer<TState, TAction = unknown> = (state: TState, action: TAction) => TState;
 
 /**
  * A subscriber function that gets called whenever the state changes.
- * I use this for UI components to react to state changes.
  */
 export type Subscriber<TState> = (state: TState) => void;
 
 /**
- * Custom error handler for tracking issues across different phases of the state pipeline.
- * Super helpful for debugging complex state flows in production.
+ * Error handler for tracking issues across different phases of state management.
  */
-export type ErrorHandler<TState, TAction = unknown> = (error: Error, phase: "dispatch" | "reduce" | "notify", context: { state: TState; action?: TAction; listener?: Subscriber<TState> }) => void;
+export type ErrorHandler<TState, TAction = unknown> = (
+  error: Error,
+  phase: "dispatch" | "reduce" | "notify",
+  context: {
+    state: TState;
+    action?: TAction;
+    listener?: Subscriber<TState>;
+  },
+) => void;
 
 /**
- * The API surface exposed to middleware - gives access to getState and dispatch.
- * This lets middleware both read from and write to the store.
+ * API surface exposed to middleware.
  */
-export type MiddlewareAPI<TState, TAction = unknown> = { getState: () => TState; dispatch: (action: TAction) => void };
+export type MiddlewareAPI<TState, TAction = unknown> = {
+  getState: () => TState;
+  dispatch: (action: TAction) => void;
+};
 
 /**
  * Middleware signature for processing actions before they hit the reducer.
- * I designed this to match Redux's middleware signature for familiarity.
  */
 export type Middleware<TState, TAction = unknown> = (api: MiddlewareAPI<TState, TAction>) => (next: (action: TAction) => void) => (action: TAction) => void;
 
 /**
- * My implementation of a predictable state container inspired by Redux.
- * Includes advanced features like middleware, time-travel debugging, and deep immutability.
+ * A predictable state container inspired by Redux.
+ * Includes features like middleware and time-travel debugging.
  */
 export class Store<TState, TAction = unknown> {
   private state: TState;
@@ -46,40 +56,39 @@ export class Store<TState, TAction = unknown> {
   /**
    * Creates a new Store instance.
    *
-   * @param initialState - The starting state for the store
-   * @param reducer - The reducer function that processes actions
-   * @param options - Optional configuration settings
-   * @param options.enableTimeTravel - Whether to enable time-travel debugging
-   * @param options.errorHandler - Custom error handler for enhanced debugging
+   * @param initialState The starting state for the store
+   * @param reducer The reducer function that processes actions
+   * @param options Optional configuration settings
    */
   constructor(
-    initialState: TState,
+    initialState: TState | undefined,
     reducer: Reducer<TState, TAction>,
     options?: {
       enableTimeTravel?: boolean;
       errorHandler?: ErrorHandler<TState, TAction>;
     },
   ) {
-    this.state = initialState;
+    // Use initialState or create empty object as fallback
+    this.state = initialState as TState;
     this.reducer = reducer;
     this.timeTravelEnabled = options?.enableTimeTravel || false;
 
-    // Set up default error handling with nice formatting
+    // Set up default error handling
     this.errorHandler =
       options?.errorHandler ||
       ((error, phase, context) => {
-        console.error(`[Error in store]: \n#### Phase ####\n ${phase} \n#### Error ####\n ${error} \n\n\n\n#### Context ####\n ${context}`);
+        console.error(`[Error in store]: Phase: ${phase}, Error: ${error.message}`, context);
       });
 
     // Initialize history tracking if time travel is enabled
-    if (this.timeTravelEnabled) {
+    if (this.timeTravelEnabled && initialState) {
       this.history.push({ state: this.deepClone(initialState), action: null });
     }
   }
 
   /**
    * Returns the current state of the store.
-   * Always returns a deep copy to maintain immutability.
+   * Returns a deep copy to maintain immutability.
    */
   public getState(): TState {
     return this.deepClone(this.state);
@@ -89,7 +98,7 @@ export class Store<TState, TAction = unknown> {
    * Applies middleware to the store.
    * Middleware gets applied in the order provided.
    *
-   * @param middleware - List of middleware functions to apply
+   * @param middleware List of middleware functions to apply
    */
   public applyMiddleware(...middleware: Middleware<TState, TAction>[]): void {
     this.middlewares = middleware;
@@ -103,7 +112,7 @@ export class Store<TState, TAction = unknown> {
    * 3. History recording (if time travel enabled)
    * 4. Listener notification
    *
-   * @param action - The action object to process
+   * @param action The action object to process
    */
   public dispatch(action: TAction): void {
     // If we have middleware, use the enhanced dispatch function
@@ -117,7 +126,7 @@ export class Store<TState, TAction = unknown> {
       // Transform each middleware into its middleware function
       const chain = this.middlewares.map((middleware) => middleware(middlewareAPI));
 
-      // Create the base dispatch function that handles the actual state update
+      // Create the base dispatch function
       const baseDispatch = (action: TAction) => {
         try {
           // Apply the reducer to get the next state
@@ -132,25 +141,28 @@ export class Store<TState, TAction = unknown> {
             }
 
             // Add new history entry
-            this.history.push({ state: this.deepClone(this.state), action });
+            this.history.push({
+              state: this.deepClone(this.state),
+              action,
+            });
             this.currentIndex = this.history.length - 1;
           }
 
-          // Tell everyone about the update
+          // Notify listeners
           this.notifyListeners(action);
         } catch (error) {
-          // Something went wrong with the reducer, handle it gracefully
+          // Handle reducer errors
           this.errorHandler(error instanceof Error ? error : new Error(String(error)), "reduce", { state: this.state, action });
         }
       };
 
-      // Build the middleware pipeline from right to left (like Redux does)
+      // Build the middleware pipeline from right to left
       const composedMiddleware = chain.reduceRight((next, middleware) => middleware(next), baseDispatch);
 
       // Run the action through our pipeline
       composedMiddleware(action);
     } else {
-      // No middleware, just use the direct dispatch path
+      // No middleware, use direct dispatch
       try {
         const newState = this.reducer(this.state, action);
         this.state = newState;
@@ -160,15 +172,18 @@ export class Store<TState, TAction = unknown> {
             this.history = this.history.slice(0, this.currentIndex + 1);
           }
 
-          this.history.push({ state: this.deepClone(this.state), action });
+          this.history.push({
+            state: this.deepClone(this.state),
+            action,
+          });
           this.currentIndex = this.history.length - 1;
         }
+
+        // Notify listeners
+        this.notifyListeners(action);
       } catch (error) {
         this.errorHandler(error instanceof Error ? error : new Error(String(error)), "reduce", { state: this.state, action });
-        return;
       }
-
-      this.notifyListeners(action);
     }
   }
 
@@ -176,15 +191,15 @@ export class Store<TState, TAction = unknown> {
    * Jumps to a specific point in history.
    * Only works if time travel is enabled.
    *
-   * @param index - History index to jump to
+   * @param index History index to jump to
    */
-  public jump(index: number) {
+  public jump(index: number): void {
     if (!this.timeTravelEnabled) return;
 
     if (index >= 0 && index < this.history.length) {
       const historyItem = this.history[index];
 
-      // Safety check - shouldn't happen but TypeScript is paranoid
+      // Safety check
       if (!historyItem) return;
 
       this.currentIndex = index;
@@ -213,7 +228,7 @@ export class Store<TState, TAction = unknown> {
    * Subscribes a listener to state changes.
    * Returns an unsubscribe function for cleanup.
    *
-   * @param listener - Function to call on state changes
+   * @param listener Function to call on state changes
    * @returns Function to call to unsubscribe
    */
   public subscribe(listener: Subscriber<TState>): () => void {
@@ -227,10 +242,10 @@ export class Store<TState, TAction = unknown> {
   }
 
   /**
-   * Private method to notify all listeners of state changes.
+   * Notify all listeners of state changes.
    * Handles errors in listeners gracefully.
    *
-   * @param action - The action that caused the state change
+   * @param action The action that caused the state change
    */
   private notifyListeners(action?: TAction): void {
     const currentState = this.getState();
@@ -245,19 +260,21 @@ export class Store<TState, TAction = unknown> {
   }
 
   /**
-   * My recursive deep clone implementation.
+   * Recursive deep clone implementation.
    * Makes sure we never accidentally mutate the state.
    *
-   * @param obj - Object to clone
+   * @param obj Object to clone
    * @returns Deep copy of the object
    */
   private deepClone<TValue>(obj: TValue): TValue {
     if (obj === null || typeof obj !== "object") return obj;
 
-    // Handle arrays recursively
-    if (Array.isArray(obj)) return obj.map((item) => this.deepClone(item)) as unknown as TValue;
+    // Handle arrays
+    if (Array.isArray(obj)) {
+      return obj.map((item) => this.deepClone(item)) as unknown as TValue;
+    }
 
-    // Handle objects recursively
+    // Handle objects
     const cloned = {} as TValue;
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -269,55 +286,16 @@ export class Store<TState, TAction = unknown> {
 }
 
 /**
- * Creates a new Store instance with the specified state, reducer, and options.
- * This is a convenience factory function that encapsulates the instantiation
- * of the Store class, making your code more readable and testable.
+ * Creates a new Store instance.
+ * Convenience factory function.
  *
- * @template TState - The type of state managed by the store
- * @template TAction - The type of actions that can be dispatched to the store
- *
- * @param {TState} initialState - The initial state of the store
- * @param {Reducer<TState, TAction>} reducer - A pure function that returns the next state given the current state and an action
- * @param {Object} [options] - Optional configuration for the store
- * @param {boolean} [options.enableTimeTravel=false] - Whether to enable time travel debugging capabilities
- * @param {ErrorHandler<TState, TAction>} [options.errorHandler] - Custom error handler for enhanced debugging and error reporting
- *
- * @returns {Store<TState, TAction>} A new store instance with the specified configuration
- *
- * @example
- * // Create a simple counter store
- * const counterStore = createStore(
- *   { count: 0 }, // initial state
- *   (state, action) => {
- *     switch (action.type) {
- *       case 'INCREMENT':
- *         return { count: state.count + 1 };
- *       case 'DECREMENT':
- *         return { count: state.count - 1 };
- *       default:
- *         return state;
- *     }
- *   },
- *   { enableTimeTravel: true } // for debugging in development
- * );
- *
- * @example
- * // Create a store with custom error handling
- * const store = createStore(
- *   initialAppState,
- *   rootReducer,
- *   {
- *     errorHandler: (error, phase, context) => {
- *       console.error(`Error in ${phase} phase:`, error);
- *       analytics.captureException(error, {
- *         extra: { stateContext: context.state }
- *       });
- *     }
- *   }
- * );
+ * @param initialState The initial state of the store
+ * @param reducer A reducer function
+ * @param options Optional configuration
+ * @returns A new store instance
  */
 export function createStore<TState, TAction = unknown>(
-  initialState: TState,
+  initialState: TState | undefined,
   reducer: Reducer<TState, TAction>,
   options?: {
     enableTimeTravel?: boolean;

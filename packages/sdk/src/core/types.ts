@@ -1,20 +1,42 @@
 /**
- * Supported Finix environments
+ * Core type definitions for the Finix SDK
  */
-export enum FINIX_ENVIRONMENT {
-  QA = "qa",
-  SANDBOX = "sandbox",
-  LIVE = "live",
-  PROD = "prod",
-}
 
 /**
- * Sift Science beacon keys for fraud detection
+ * Supported Finix environments
  */
-export enum SIFT_BEACON_KEY {
-  QA_SANDBOX = "523dfab8f5",
-  LIVE_PROD = "4ceeab9947",
+export namespace Environment {
+  export enum Type {
+    QA = "qa",
+    SANDBOX = "sandbox",
+    LIVE = "live",
+    PROD = "prod",
+  }
+
+  export const ApiUrls: Record<Type, string> = {
+    [Type.QA]: "https://finix.qa-payments-api.com",
+    [Type.SANDBOX]: "https://finix.sandbox-payments-api.com",
+    [Type.LIVE]: "https://finix.live-payments-api.com",
+    [Type.PROD]: "https://finix.live-payments-api.com",
+  };
+
+  export const BeaconKeys: Record<Type, string> = {
+    [Type.QA]: "523dfab8f5",
+    [Type.SANDBOX]: "523dfab8f5",
+    [Type.LIVE]: "4ceeab9947",
+    [Type.PROD]: "4ceeab9947",
+  };
+
+  export const IframeUrls: Record<Type, string> = {
+    [Type.QA]: "https://js.finix.com/qa/payment-fields/index.html",
+    [Type.SANDBOX]: "https://js.finix.com/sandbox/payment-fields/index.html",
+    [Type.LIVE]: "https://js.finix.com/live/payment-fields/index.html",
+    [Type.PROD]: "https://js.finix.com/live/payment-fields/index.html",
+  };
 }
+
+// Legacy support for existing code
+export type FINIX_ENVIRONMENT = Environment.Type;
 
 /**
  * Status of the Finix SDK initialization
@@ -27,44 +49,81 @@ export enum InitializationStatus {
 }
 
 /**
- * Default Sift Science beacon keys by environment
+ * Card form field types
  */
-export const DEFAULT_BEACON_KEYS: Record<FINIX_ENVIRONMENT, string> = {
-  [FINIX_ENVIRONMENT.QA]: SIFT_BEACON_KEY.QA_SANDBOX,
-  [FINIX_ENVIRONMENT.SANDBOX]: SIFT_BEACON_KEY.QA_SANDBOX,
-  [FINIX_ENVIRONMENT.LIVE]: SIFT_BEACON_KEY.LIVE_PROD,
-  [FINIX_ENVIRONMENT.PROD]: SIFT_BEACON_KEY.LIVE_PROD,
+export enum CARD_FIELD_TYPE {
+  NUMBER = "number",
+  EXPIRATION_DATE = "expiration_date",
+  SECURITY_CODE = "security_code",
+  NAME = "name",
+}
+
+/**
+ * Address form field types
+ */
+export enum ADDRESS_FIELD_TYPE {
+  LINE1 = "address.line1",
+  LINE2 = "address.line2",
+  CITY = "address.city",
+  STATE = "address.state",
+  POSTAL_CODE = "address.postal_code",
+  COUNTRY = "address.country",
+  REGION = "address.region",
+}
+
+/**
+ * Account types for bank accounts
+ */
+export enum ACCOUNT_TYPE {
+  CHECKING = "checking",
+  SAVINGS = "savings",
+}
+
+/**
+ * Bank form field types
+ */
+export enum BANK_FIELD_TYPE {
+  NAME = "name",
+  ACCOUNT_NUMBER = "account_number",
+  ROUTING_NUMBER = "routing_number",
+  TRANSIT_NUMBER = "transit_number",
+  INSTITUTION_NUMBER = "institution_number",
+  BANK_CODE = "bank_code",
+  ACCOUNT_TYPE = "account_type",
+}
+
+/**
+ * Default error messages by field
+ */
+export const DEFAULT_ERROR_MESSAGES: Record<string, string> = {
+  // Card fields
+  [CARD_FIELD_TYPE.NUMBER]: "Please enter a valid card number",
+  [CARD_FIELD_TYPE.EXPIRATION_DATE]: "Please enter a valid expiration date",
+  [CARD_FIELD_TYPE.SECURITY_CODE]: "Please enter a valid security code",
+  [CARD_FIELD_TYPE.NAME]: "Please enter the cardholder name",
+
+  // Bank fields
+  [BANK_FIELD_TYPE.ACCOUNT_NUMBER]: "Please enter a valid account number",
+  [BANK_FIELD_TYPE.ROUTING_NUMBER]: "Please enter a valid routing number",
+  [BANK_FIELD_TYPE.BANK_CODE]: "Please enter a valid bank code",
+  [BANK_FIELD_TYPE.TRANSIT_NUMBER]: "Please enter a valid transit number",
+  [BANK_FIELD_TYPE.INSTITUTION_NUMBER]: "Please enter a valid institution number",
+
+  // Address fields
+  [ADDRESS_FIELD_TYPE.LINE1]: "Please enter a valid address",
+  [ADDRESS_FIELD_TYPE.CITY]: "Please enter a valid city",
+  [ADDRESS_FIELD_TYPE.STATE]: "Please enter a valid state",
+  [ADDRESS_FIELD_TYPE.POSTAL_CODE]: "Please enter a valid postal code",
+  [ADDRESS_FIELD_TYPE.COUNTRY]: "Please select a country",
 };
 
 /**
- * Default API URLs by environment
+ * Branded types for stronger type checking
  */
-export const DEFAULT_API_URLS: Record<FINIX_ENVIRONMENT, string> = {
-  [FINIX_ENVIRONMENT.QA]: "https://finix.qa-payments-api.com",
-  [FINIX_ENVIRONMENT.SANDBOX]: "https://finix.sandbox-payments-api.com",
-  [FINIX_ENVIRONMENT.LIVE]: "https://finix.live-payments-api.com",
-  [FINIX_ENVIRONMENT.PROD]: "https://finix.live-payments-api.com",
-};
-
-/**
- * Mapping from our field names to the API field names
- */
-export const FORM_NAME_MAPPER = {
-  name: "name",
-  number: "number",
-  expirationDate: "expiration_date",
-  securityCode: "security_code",
-  accountNumber: "account_number",
-  bankCode: "bank_code",
-  accountType: "account_type",
-  addressLine1: "address_line1",
-  addressLine2: "address_line2",
-  addressCity: "address_city",
-  addressState: "address_state",
-  addressRegion: "addressRegion",
-  addressCountry: "address_country",
-  addressPostalCode: "address_postal_code",
-} as const;
+export type FormId = string & { readonly _brand: unique symbol };
+export type ApplicationId = string & { readonly _brand: unique symbol };
+export type TokenId = string & { readonly _brand: unique symbol };
+export type MerchantId = string & { readonly _brand: unique symbol };
 
 /**
  * Types of payment instruments supported
@@ -82,12 +141,34 @@ export const CARD_BRANDS = {
   MASTERCARD: "mastercard",
   AMEX: "amex",
   DISCOVER: "discover",
+  UNKNOWN: "unknown",
 } as const;
 
 /**
  * Card brand type
  */
 export type CardBrand = (typeof CARD_BRANDS)[keyof typeof CARD_BRANDS];
+
+/**
+ * Mapping from our field names to the API field names
+ */
+export const FORM_NAME_MAPPER = {
+  name: "name",
+  number: "number",
+  expirationDate: "expiration_date",
+  securityCode: "security_code",
+  accountNumber: "account_number",
+  routingNumber: "routing_number",
+  bankCode: "bank_code",
+  accountType: "account_type",
+  addressLine1: "address.line1",
+  addressLine2: "address.line2",
+  addressCity: "address.city",
+  addressState: "address.state",
+  addressRegion: "address.region",
+  addressCountry: "address.country",
+  addressPostalCode: "address.postal_code",
+} as const;
 
 /**
  * Field names in our form
@@ -112,109 +193,103 @@ export type FontFormat = "woff" | "woff2" | "truetype" | "opentype" | "embedded-
 /**
  * Font definition for custom fonts
  */
-export type Font = {
-  fontFamily: string;
-  url: string;
-  format: FontFormat;
-};
+export interface Font {
+  readonly fontFamily: string;
+  readonly url: string;
+  readonly format: FontFormat;
+}
 
 /**
  * Array of font definitions
  */
-export type Fonts = Font[];
+export type Fonts = readonly Font[];
 
 /**
  * Represents the state of an individual form field.
- * Contains all the metadata and values needed to track a field's lifecycle.
  */
 export interface FieldState {
   /** The current value of the field */
-  value: string;
+  readonly value: string;
   /** Whether the field currently has focus */
-  isFocused: boolean;
+  readonly isFocused: boolean;
   /** Whether the field has been modified by the user */
-  isDirty: boolean;
+  readonly isDirty: boolean;
   /** Whether the field's current value passes validation */
-  isValid: boolean;
+  readonly isValid: boolean;
   /** Error messages if validation fails */
-  errorMessages: string[];
+  readonly errorMessages: string[];
   /** Selected option for dropdown fields */
-  selected?: string;
+  readonly selected?: string;
   /** Selected country for country fields */
-  country?: string;
-  /** Single error message (for backward compatibility) */
-  errorMessage?: string;
+  readonly country?: string;
 }
 
 /**
  * BIN information returned from card network lookup.
- * Contains metadata about the card used for various business logic.
  */
 export interface BinInformation {
   /** The card's brand (Visa, Mastercard, etc.) */
-  cardBrand?: CardBrand;
+  readonly cardBrand: CardBrand;
   /** First 6-8 digits of the card (the BIN/IIN) */
-  bin?: string;
-  /** Card level (Gold, Platinum, etc.) */
-  level?: string;
-  /** Issuing bank */
-  issuer?: string;
-  /** Country of issuance */
-  country?: string;
-  /** Whether this is a debit card */
-  isDebit?: boolean;
-  /** Whether this is a commercial/business card */
-  isCommercial?: boolean;
-  /** How the card is funded */
-  funding?: string;
-  /** Product type of the card */
-  product?: string;
-  /** Whether this is an international card */
-  isInternational?: boolean;
-  /** Whether this card is eligible for fast funds (rapid settlement) */
-  isFastFundsEligible?: boolean;
+  readonly bin: string;
 }
 
 /**
  * The result of validating a field's value.
- * Used to track validation state and provide user feedback.
  */
 export interface ValidationResult {
   /** Whether the validation passed */
-  isValid: boolean;
+  readonly isValid: boolean;
   /** Error message if validation failed */
-  errorMessage?: string;
+  readonly errorMessage?: string;
 }
 
 /**
+ * Type for field validation functions
+ */
+export type FieldValidator = (value: string) => ValidationResult;
+
+/**
+ * Type-safe mapping for field validations
+ */
+export type FieldValidations = {
+  readonly [K in FieldName]?: readonly FieldValidator[];
+};
+
+/**
  * Style options for customizing the appearance of form fields.
- * These get passed to the iframes for consistent styling.
  */
 export interface StyleOptions {
   /** Base styles for the field in its default state */
-  base?: {
+  readonly default?: Readonly<{
     color?: string;
     fontFamily?: string;
     fontSize?: string;
     fontWeight?: string;
     lineHeight?: string;
     padding?: string;
-  };
+    border?: string;
+    borderRadius?: string;
+    boxShadow?: string;
+  }>;
   /** Styles applied when the field has focus */
-  focus?: {
+  readonly focus?: Readonly<{
     color?: string;
     border?: string;
-  };
+    boxShadow?: string;
+  }>;
   /** Styles applied when the field has a validation error */
-  error?: {
+  readonly error?: Readonly<{
     color?: string;
     border?: string;
-  };
+    boxShadow?: string;
+  }>;
   /** Styles applied when the field passes validation */
-  success?: {
+  readonly success?: Readonly<{
     color?: string;
     border?: string;
-  };
+    boxShadow?: string;
+  }>;
 }
 
 /**
@@ -222,50 +297,149 @@ export interface StyleOptions {
  */
 export interface FieldOptions {
   /** Label text for the field */
-  label?: string;
+  readonly label?: string;
   /** Placeholder text for the field */
-  placeholder?: string;
+  readonly placeholder?: {
+    readonly text: string;
+    readonly hideOnFocus?: boolean;
+  };
   /** Validation functions to apply to this field */
-  validations?: Function[];
+  readonly validations?: string | readonly FieldValidator[];
   /** Whether to enable browser autocomplete */
-  autoComplete?: boolean;
+  readonly autoComplete?: boolean | string;
   /** Error message to display if validation fails */
-  errorMessage?: string;
+  readonly errorMessage?: string;
   /** Custom fonts to use for this field */
-  fonts?: string;
+  readonly fonts?: Fonts;
   /** Default value for the field */
-  defaultValue?: string;
+  readonly defaultValue?: string;
+  /** Default option for dropdowns */
+  readonly defaultOption?: string;
+  /** Options for dropdown fields */
+  readonly options?: string[] | "country" | "state" | "account_type";
   /** Custom styles for the field */
-  styles?: StyleOptions;
+  readonly styles?: StyleOptions;
 }
 
 /**
+ * Error types for better error handling
+ */
+export type ApiError = Readonly<{
+  code: string;
+  message: string;
+  details?: unknown;
+}>;
+
+export type ValidationError = Readonly<{
+  field: FieldName;
+  message: string;
+}>;
+
+export type FormError = ApiError | ValidationError | string;
+
+/**
+ * Callbacks for form events with specific type definitions
+ */
+export type FormReadyCallback = () => void;
+export type FormUpdateCallback = (state: FormState, binInfo: BinInformation | undefined, hasErrors: boolean) => void;
+export type FormSubmitCallback = () => void;
+
+/**
  * Configuration options for creating a form.
- * This is the primary way to customize form behavior and appearance.
  */
 export interface FormOptions {
-  /** The environment to operate in */
-  environment: FINIX_ENVIRONMENT | keyof typeof FINIX_ENVIRONMENT;
-  /** Your Finix application ID */
-  applicationId: string;
+  /** Environment this form is operating in */
+  readonly environment: Environment.Type;
+  /** Application ID for this form */
+  readonly applicationId: ApplicationId | string;
+  readonly sessionKey: string;
   /** Whether to show field labels */
-  showLabels?: boolean;
+  readonly showLabels?: boolean;
   /** Whether to show field placeholders */
-  showPlaceholders?: boolean;
+  readonly showPlaceholders?: boolean;
   /** Whether to show address fields */
-  showAddress?: boolean;
+  readonly showAddress?: boolean;
   /** Fields to hide from the form */
-  hideFields?: HideableFieldName[];
+  readonly hideFields?: HideableFieldName[];
+  /** Fields that are required (will be validated) */
+  readonly requiredFields?: FieldName[];
   /** Custom styles for the form fields */
-  styles?: StyleOptions;
+  readonly styles?: StyleOptions;
   /** Custom web fonts to load */
-  fonts?: Fonts;
+  readonly fonts?: Fonts;
   /** Callback when the form is fully loaded and ready */
-  onReady?: () => void;
+  readonly onReady?: FormReadyCallback;
   /** Callback when the form state changes */
-  onUpdate?: (state: any, binInfo: BinInformation | undefined, hasErrors: boolean) => void;
+  readonly onUpdate?: FormUpdateCallback;
   /** Callback when the form is submitted */
-  onSubmit?: () => void;
+  readonly onSubmit?: FormSubmitCallback;
   /** Custom text for the submit button */
-  submitLabel?: string;
+  readonly submitLabel?: string;
+  /** Custom error messages by field */
+  readonly errorMessages?: Record<string, string>;
+  /** Default country for address */
+  readonly defaultCountry?: string;
+  /** Default values for fields */
+  readonly defaultValues?: Record<string, string>;
+  /** Whether to hide error messages */
+  readonly hideErrorMessages?: boolean;
+}
+
+/**
+ * The complete state of a payment form.
+ */
+export interface FormState<T extends PaymentType = PaymentType> {
+  /** Unique identifier for this form instance */
+  readonly formId: FormId;
+  /** The type of payment this form handles */
+  readonly paymentType: T;
+  /** Collection of all fields in the form */
+  readonly fields: Readonly<Record<string, FieldState>>;
+  /** BIN information if this is a card form */
+  readonly binInformation: BinInformation;
+  /** Whether this form is currently submitting */
+  readonly isSubmitting: boolean;
+  /** Errors from the last submission attempt */
+  readonly submitErrors?: readonly FormError[];
+  /** Form options used during initialization */
+  readonly options: FormOptions;
+}
+
+/**
+ * Message types for iframe communication
+ */
+export enum MessageType {
+  FIELD_UPDATED = "field-updated",
+  FORM_SUBMIT = "form-submit",
+  BIN_INFORMATION = "bin-information-received",
+  RESPONSE_RECEIVED = "response-received",
+  RESPONSE_ERROR = "response-error",
+  SUBMIT = "submit",
+}
+
+/**
+ * Interface for messages sent between iframes
+ */
+export interface IframeMessage<T = unknown> {
+  readonly messageId?: string;
+  readonly messageName: MessageType | string;
+  readonly formId: string;
+  readonly messageData: T;
+}
+
+/**
+ * Field update message data
+ */
+export interface FieldUpdateMessageData {
+  readonly name: string;
+  readonly state: FieldState;
+}
+
+/**
+ * Submit message data
+ */
+export interface SubmitMessageData {
+  readonly environment: Environment.Type;
+  readonly applicationId: string;
+  readonly data: Record<string, unknown>;
 }

@@ -1,92 +1,92 @@
-import { ActionType } from "./actions/types";
+import { BinInformation, FieldState, PaymentType, Environment, FormId, ApplicationId, FormOptions, FormState, FieldName, FormError } from "../core/types";
 
-export enum CARD_FIELD_TYPE {
-  NUMBER = "number",
-  EXPIRATION_DATE = "expiration_date",
-  SECURITY_CODE = "security_code",
-  NAME = "name",
+/**
+ * Specific action types for form state management
+ */
+export type FormActionType = "FIELD_UPDATE" | "FIELD_FOCUS" | "FIELD_BLUR" | "FORM_SUBMIT" | "FORM_SUBMIT_SUCCESS" | "FORM_SUBMIT_ERROR" | "FORM_RESET" | "BIN_INFORMATION_UPDATE";
+
+/**
+ * Typed action creators for form actions with discriminated union
+ */
+export type FormActions = { type: "FIELD_UPDATE"; payload: { fieldName: FieldName; value: string } } | { type: "FIELD_FOCUS"; payload: { fieldName: FieldName } } | { type: "FIELD_BLUR"; payload: { fieldName: FieldName } } | { type: "FORM_SUBMIT"; payload: void } | { type: "FORM_SUBMIT_SUCCESS"; payload: { tokenId: string } } | { type: "FORM_SUBMIT_ERROR"; payload: { errors: FormError[] } } | { type: "FORM_RESET"; payload: void } | { type: "BIN_INFORMATION_UPDATE"; payload: { binInfo: BinInformation } };
+
+/**
+ * Generic action structure for our Flux/Redux pattern.
+ */
+export interface Action<T extends string, P = void> {
+  /** String literal type identifying the action */
+  readonly type: T;
+  /** Data associated with the action */
+  readonly payload: P;
 }
 
-export enum BANK_FIELD_TYPE {
-  NAME = "name",
-  ACCOUNT_TYPE = "account_type",
-  ACCOUNT_NUMBER = "account_number",
-  BANK_CODE = "bank_code",
-}
+/**
+ * Helper type to extract the action type from an action.
+ */
+export type ActionType<A> = A extends Action<infer T, any> ? T : never;
 
-export enum ADDRESS_Field_Type {
-  ADDRESS_LINE1 = "address_line1",
-  ADDRESS_LINE2 = "address_line2",
-  ADDRESS_CITY = "address_city",
-  ADDRESS_STATE = "address_state",
-  ADDRESS_REGION = "address_region",
-  ADDRESS_COUNTRY = "address_country",
-  ADDRESS_POSTAL_CODE = "address_postal_code",
-}
+/**
+ * Helper type to extract the payload type from an action.
+ */
+export type ActionPayload<A> = A extends Action<any, infer P> ? P : never;
 
-export enum CARD_BRAND_TYPE {
-  VISA = "visa",
-  MASTERCARD = "mastercard",
-  AMEX = "amex",
-  DISCOVER = "discover",
-  DINERSCLUB = "dinersclub",
-  JCB = "jcb",
-  UNIONPAY = "unionpay",
-  UNKNOWN = "unknown",
-}
+/**
+ * A pure function that takes the current state and an action,
+ * then returns a new state.
+ */
+export type Reducer<S, A extends Action<string, any> = any> = (state: S, action: A) => S;
 
-type CardPaymentField = CARD_FIELD_TYPE;
+/**
+ * A function that receives state updates.
+ */
+export type Subscriber<S> = (state: S) => void;
 
-type BankPaymentField = BANK_FIELD_TYPE;
+/**
+ * Interface for error handlers used in the store.
+ */
+export type ErrorHandler<TState, TAction extends Action<string, any> = any> = (
+  error: Error,
+  phase: "dispatch" | "reduce" | "notify",
+  context: {
+    readonly state: TState;
+    readonly action?: TAction;
+    readonly listener?: Subscriber<TState>;
+  },
+) => void;
 
-type AddressField = ADDRESS_Field_Type;
-
-type CardBrand = CARD_BRAND_TYPE;
-
-type FieldType = CardPaymentField | BankPaymentField | AddressField;
-
-export type FieldState = {
-  // Core field data
-  value: string;
-
-  // UI state
-  isFocused: boolean;
-  isDirty: boolean; // Has been modified from initial state
-  isTouched: boolean; // Has been interacted with at least once
-
-  // Validation state
-  validation: {
-    isValid: boolean;
-    errorMessage?: string;
-    rules: string[]; // Names of validation rules applied
-  };
-
-  // Field metadata
-  isRequired: boolean;
-  isHidden: boolean;
-  fieldType: FieldType; // What kind of field this is
-
-  // Field-specific properties
-  maxLength?: number; // Optional for fields with length restrictions
-  mask?: string; // Optional display formatting
-  placeholder?: string; // Visual placeholder
+/**
+ * Interface for the API exposed to middleware.
+ */
+export type MiddlewareAPI<TState, TAction extends Action<string, any> = any> = {
+  readonly getState: () => TState;
+  readonly dispatch: (action: TAction) => void;
 };
 
-export interface BinInformation {
-  bin: string; // First couple of digits of card number
-  cardBrand?: CardBrand; // Visa, MasterCard, etc.
+/**
+ * Middleware function signature with better type constraints.
+ */
+export type Middleware<TState, TAction extends Action<string, any> = any> = (api: MiddlewareAPI<TState, TAction>) => (next: (action: TAction) => void) => (action: TAction) => void;
+
+/**
+ * Core store interface that implements the Flux pattern.
+ */
+export interface IStore<S, A extends Action<string, any> = any> {
+  /** Get the current state */
+  getState(): S;
+  /** Dispatch an action to update state */
+  dispatch(action: A): void;
+  /** Subscribe to state changes */
+  subscribe(subscriber: Subscriber<S>): () => void;
 }
 
-export type FormState = {
-  fields: Record<FieldType, FieldState>;
-  binInformation?: BinInformation;
-  isSubmitting: boolean;
-};
-
-export type FieldAction = {
-  type: ActionType;
-  payload: {
-    fieldName: string;
-    value?: string;
-  };
-};
+/**
+ * Form-specific store with additional methods
+ */
+export interface FormStore<T extends PaymentType = PaymentType> extends IStore<FormState<T>, FormActions> {
+  /** Tokenizes the form data and returns a token */
+  tokenize(): Promise<string>;
+  /** Resets the form to its initial state */
+  reset(): void;
+  /** Validates all fields and returns validity */
+  validate(): boolean;
+}
