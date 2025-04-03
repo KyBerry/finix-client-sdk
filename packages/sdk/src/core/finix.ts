@@ -2,7 +2,6 @@ import { Environment, InitializationStatus, FormOptions, FormId, PaymentType, To
 import { createBrandedId, generateTimestampedId } from "../utils/uuid";
 import { FraudDetection } from "./fraud-detection";
 import { IframeManager } from "./iframe-manager";
-import { TokenizationService } from "./tokenization";
 import { createFormReducer, RootAction } from "../state/reducers/rootReducer";
 import { Store } from "../state/store";
 import { updateField, focusField, blurField } from "../state/actions/fieldActions";
@@ -17,8 +16,9 @@ import { detectCardBrand } from "./validators";
 export class Finix {
   private readonly merchantId: string;
   private readonly environment: Environment.Type;
-  private status: InitializationStatus = InitializationStatus.NOT_STARTED;
+  private sessionId: string | null = null;
   private initPromise: Promise<void> | null = null;
+  private status: InitializationStatus = InitializationStatus.NOT_STARTED;
 
   /**
    * Create a new Finix SDK instance
@@ -40,7 +40,7 @@ export class Finix {
       this.status = InitializationStatus.INITIALIZING;
 
       // Create a fraud session
-      await FraudDetection.setup(this.merchantId, this.environment);
+      this.sessionId = await FraudDetection.setup(this.merchantId, this.environment);
 
       // Mark initialization as complete
       this.status = InitializationStatus.READY;
@@ -57,8 +57,8 @@ export class Finix {
    * @param options Form options
    * @returns A payment form instance
    */
-  public CardTokenForm(elementId: string, options: FormOptions): PaymentForm {
-    return this.createForm("card", elementId, options);
+  public async CardTokenForm(elementId: string, options: FormOptions): Promise<PaymentForm> {
+    return await this.createForm("card", elementId, options);
   }
 
   /**
@@ -67,8 +67,8 @@ export class Finix {
    * @param options Form options
    * @returns A payment form instance
    */
-  public BankTokenForm(elementId: string, options: FormOptions): PaymentForm {
-    return this.createForm("bankAccount", elementId, options);
+  public async BankTokenForm(elementId: string, options: FormOptions): Promise<PaymentForm> {
+    return await this.createForm("bankAccount", elementId, options);
   }
 
   /**
@@ -78,9 +78,13 @@ export class Finix {
    * @param options Form options
    * @returns A payment form instance
    */
-  private createForm(paymentType: PaymentType, elementId: string, options: FormOptions): PaymentForm {
+  private async createForm(paymentType: PaymentType, elementId: string, options: FormOptions): Promise<PaymentForm> {
+    if (this.initPromise) {
+      await this.initPromise;
+    }
+
     // Ensure the SDK is initialized
-    if (this.status !== InitializationStatus.READY && !this.initPromise) {
+    if (this.status !== InitializationStatus.READY || !this.sessionId) {
       throw new Error("Finix SDK not initialized");
     }
 
@@ -88,7 +92,7 @@ export class Finix {
     const formId = createBrandedId<FormId>(generateTimestampedId(`form-${paymentType}-`));
 
     // Create a PaymentForm instance
-    return new PaymentForm(formId, paymentType, elementId, options);
+    return new PaymentForm(formId, paymentType, elementId, this.sessionId, options);
   }
 }
 
@@ -100,6 +104,7 @@ class PaymentForm {
   private readonly formId: FormId;
   private readonly paymentType: PaymentType;
   private readonly elementId: string;
+  private readonly sessionId: string;
   private readonly options: FormOptions;
   private readonly iframeManager: IframeManager;
   private readonly store: Store<FormState, RootAction>;
@@ -115,10 +120,11 @@ class PaymentForm {
    * @param sessionKey Session key for fraud detection
    * @param options Form options
    */
-  constructor(formId: FormId, paymentType: PaymentType, elementId: string, options: FormOptions) {
+  constructor(formId: FormId, paymentType: PaymentType, elementId: string, sessionId: string, options: FormOptions) {
     this.formId = formId;
     this.paymentType = paymentType;
     this.elementId = elementId;
+    this.sessionId = sessionId;
 
     // Set up options with defaults
     this.options = {
@@ -128,7 +134,6 @@ class PaymentForm {
       showPlaceholders: options.showPlaceholders !== false,
       showAddress: options.showAddress || false,
       hideFields: options.hideFields || [],
-      sessionKey: options.sessionKey,
       styles: options.styles || {},
       fonts: options.fonts || [],
       onReady: options.onReady,
@@ -139,9 +144,6 @@ class PaymentForm {
 
     // Create the iframe manager
     this.iframeManager = new IframeManager(formId, paymentType, this.options.environment);
-
-    // Create the tokenization service
-    const tokenizationService = new TokenizationService(this.options.applicationId, this.options.environment, this.options.sessionKey);
 
     // Create the store
     const formReducer = createFormReducer(formId, paymentType, this.options);
@@ -240,9 +242,9 @@ class PaymentForm {
     // Dispatch submission action
     this.store.dispatch(submitForm(this.formId));
 
-    // Submit the form data
+    // Submit the form data through the iframe manager
     this.iframeManager
-      .submitWithData(environment, applicationId, data)
+      .submitWithData(environment, applicationId, this.sessionId, data)
       .then((response) => {
         // Handle success
         const tokenId = createBrandedId<TokenId>(response.id);
@@ -279,7 +281,7 @@ class PaymentForm {
       return;
     }
 
-    // Submit the form
+    // Submit the form with empty additional data
     this.submitWithData(environment, applicationId, {}, callback);
   }
 

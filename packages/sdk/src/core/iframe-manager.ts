@@ -110,10 +110,11 @@ export class IframeManager {
    * Submit data through the iframe
    * @param environment The Finix environment
    * @param applicationId The application ID
+   * @param sessionId Session ID for fraud detection
    * @param data Additional data to submit
    * @returns A promise that resolves with the response
    */
-  public submitWithData(environment: Environment.Type, applicationId: string, data: Record<string, unknown> = {}): Promise<{ id: string }> {
+  public submitWithData(environment: Environment.Type, applicationId: string, sessionId: string, data: Record<string, unknown> = {}): Promise<{ id: string }> {
     return new Promise((resolve, reject) => {
       // Ensure we have iframes to work with
       if (this.iframes.length === 0) {
@@ -147,6 +148,12 @@ export class IframeManager {
       // Add the response handler
       window.addEventListener("message", responseHandler);
 
+      // Add the fraud session ID to the data
+      const enhancedData = {
+        ...data,
+        fraud_session_id: sessionId,
+      };
+
       // Send the submission message to the first iframe
       // (all fields share the same form, so any iframe can process the submission)
       const iframe = this.iframes[0];
@@ -162,10 +169,11 @@ export class IframeManager {
         {
           messageId,
           messageName: MessageType.SUBMIT,
+          formId: this.formId,
           messageData: {
             environment,
             applicationId,
-            data,
+            data: enhancedData,
           },
         },
         "*",

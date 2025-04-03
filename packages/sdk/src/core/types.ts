@@ -352,7 +352,6 @@ export interface FormOptions {
   readonly environment: Environment.Type;
   /** Application ID for this form */
   readonly applicationId: ApplicationId | string;
-  readonly sessionKey: string;
   /** Whether to show field labels */
   readonly showLabels?: boolean;
   /** Whether to show field placeholders */
