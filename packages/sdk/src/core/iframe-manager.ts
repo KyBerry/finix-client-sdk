@@ -58,17 +58,12 @@ export class IframeManager {
     });
 
     // Encode the options to make them URL-safe
-    const encodedOptions = btoa(JSON.stringify(cleanOptions));
+    const encodedOptions = Buffer.from(JSON.stringify(cleanOptions));
 
     // Create a secure iframe
     const iframe = document.createElement("iframe");
     iframe.src = `${this.baseUrl}${encodedOptions}`;
     iframe.style.border = "none";
-
-    // Important security attributes
-    iframe.setAttribute("sandbox", "allow-scripts allow-forms allow-same-origin");
-    iframe.setAttribute("scrolling", "no");
-    iframe.setAttribute("allowtransparency", "true");
 
     // Track this iframe
     this.iframes.push(iframe);

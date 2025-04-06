@@ -3,6 +3,8 @@ import { Environment, FormId, FormOptions, FormState, PaymentType } from "../../
 import { fieldReducer } from "./fieldReducer";
 import { formReducer } from "./formReducer";
 import { binInfoReducer } from "./binInfoReducer";
+import { FieldAction } from "../actions/fieldActions";
+import { BinInformationUpdateAction } from "../actions/binInfoActions";
 
 /**
  * Root action type combining all action types
@@ -41,8 +43,8 @@ export function rootReducer<T extends PaymentType>(state: FormState<T> | undefin
   // Apply individual reducers to each state slice
   return {
     ...state,
-    fields: fieldReducer(state.fields, action as any),
-    binInformation: binInfoReducer(state.binInformation, action as any),
+    fields: fieldReducer(state.fields, action as FieldAction),
+    binInformation: binInfoReducer(state.binInformation, action as BinInformationUpdateAction),
     isSubmitting: formReducer(
       {
         isSubmitting: state.isSubmitting,

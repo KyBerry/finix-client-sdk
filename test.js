@@ -111,10 +111,120 @@ var h = (function () {
       {
         key: "field",
         value: function (e, t) {
-          var n = btoa(JSON.stringify(c({ formId: this.id, type: e, paymentInstrumentType: f[this.type], styles: t.styles, placeholder: t.placeholder, validations: t.validations, autoComplete: t.autoComplete, options: t.options, defaultOption: t.defaultOption, errorMessage: t.errorMessage, fonts: t.fonts, defaultValue: t.defaultValue }))),
-            r = this.getIframeUrl(n),
-            o = document.createElement("iframe");
-          return (o.src = r), (o.style.border = "none"), this.fields.push(o), (this.state[e] = c({ isFocused: !1, isDirty: !1, errorMessages: [], selected: t.defaultOption, country: "address.country" === e ? t.defaultOption : void 0 })), o;
+          // Track call count using a static counter on the function itself
+          this.field.callCount = (this.field.callCount || 0) + 1;
+          const callId = this.field.callCount;
+
+          // Initialize field tracking if not already done
+          if (!window.finixFieldTracking) {
+            window.finixFieldTracking = {
+              fields: [],
+              startTime: performance.now(),
+              summary: function () {
+                const fields = this.fields;
+                const totalTime = performance.now() - this.startTime;
+
+                console.group("%c[Finix Fields Summary]", "color: #9C27B0; font-weight: bold");
+                console.log(`📊 Total fields created: ${fields.length}`);
+                console.log(`⏱️ Total initialization time: ${totalTime.toFixed(2)}ms`);
+
+                // Group by field type
+                const typeCount = fields.reduce((acc, field) => {
+                  acc[field.type] = (acc[field.type] || 0) + 1;
+                  return acc;
+                }, {});
+
+                console.log("🔍 Fields by type:");
+                Object.entries(typeCount).forEach(([type, count]) => {
+                  console.log(`  - ${type}: ${count}`);
+                });
+
+                // Size analysis
+                const totalConfigSize = fields.reduce((sum, field) => sum + field.configSize, 0);
+                console.log(`📦 Total configuration payload: ${(totalConfigSize / 1024).toFixed(2)}KB`);
+                console.log(`📏 Average config size: ${(totalConfigSize / fields.length / 1024).toFixed(2)}KB per field`);
+
+                console.groupEnd();
+              },
+            };
+
+            // Add summary command to console
+            console.log("%c[Finix Debug] Type window.finixFieldTracking.summary() to see field creation summary", "color: #2196F3");
+          }
+
+          console.group(`%c[Finix Field Creation #${callId}]`, "color: #4CAF50; font-weight: bold");
+          console.debug(`🔍 Creating field of type: "${e}" (Call #${callId})`);
+          console.debug("📋 Field options:", t);
+
+          // Performance tracking
+          const startTime = performance.now();
+
+          // Create config object with all necessary parameters
+          const fieldConfig = {
+            formId: this.id,
+            type: e,
+            paymentInstrumentType: f[this.type],
+            styles: t.styles,
+            placeholder: t.placeholder,
+            validations: t.validations,
+            autoComplete: t.autoComplete,
+            options: t.options,
+            defaultOption: t.defaultOption,
+            errorMessage: t.errorMessage,
+            fonts: t.fonts,
+            defaultValue: t.defaultValue,
+          };
+          console.debug("✅ Finalized field configuration:", fieldConfig);
+
+          // Encode config as base64 string
+          const encodingStart = performance.now();
+          var n = btoa(JSON.stringify(c(fieldConfig)));
+          const encodingTime = performance.now() - encodingStart;
+          console.debug("⏱️ Encoding time:", encodingTime.toFixed(2) + "ms");
+
+          // Analyze configuration size
+          const configSize = n.length;
+          console.debug("📏 Configuration size:", (configSize / 1024).toFixed(2) + "KB");
+          console.debug("🔐 Base64 encoded configuration (truncated):", n.substring(0, 50) + (n.length > 50 ? "..." : ""));
+
+          // Generate full iframe URL
+          var r = this.getIframeUrl(n);
+          console.debug("🌐 iframe URL:", r);
+
+          // Create iframe element
+          var o = document.createElement("iframe");
+          o.src = r;
+          o.style.border = "none";
+
+          // Add iframe to form's fields collection
+          this.fields.push(o);
+
+          // Initialize field state
+          this.state[e] = c({
+            isFocused: false,
+            isDirty: false,
+            errorMessages: [],
+            selected: t.defaultOption,
+            country: "address.country" === e ? t.defaultOption : undefined,
+          });
+          console.debug("⚙️ Field state initialized:", this.state[e]);
+
+          // Track this field creation
+          window.finixFieldTracking.fields.push({
+            id: callId,
+            type: e,
+            element: o,
+            creationTime: performance.now() - startTime,
+            encodingTime: encodingTime,
+            configSize: configSize,
+            options: t,
+          });
+
+          console.debug("📦 iframe element created:", o);
+          console.debug("⏱️ Creation time:", (performance.now() - startTime).toFixed(2) + "ms");
+          console.groupEnd();
+
+          return o;
         },
       },
     ]),
@@ -1957,7 +2067,6 @@ window.Finix = {
                 };
               })(r, n),
             );
-
           return (
             (function (e, t) {
               var n = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : {},
@@ -2057,36 +2166,120 @@ window.Finix = {
               })(r, n),
             );
           return (
-            (function (e, t) {
-              var n = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : {},
-                r = n.placeholders,
-                o = void 0 === r ? {} : r,
-                i = n.showPlaceholders,
-                s = void 0 === i || i,
-                a = n.labels,
-                d = void 0 === a ? {} : a,
-                l = n.showLabels,
-                u = void 0 === l || l,
-                f = n.showAddress,
-                p = void 0 !== f && f,
-                h = n.hideFields,
-                m = void 0 === h ? [] : h,
-                y = n.styles,
-                b = void 0 === y ? {} : y,
-                g = n.onLoad,
-                v = n.hideErrorMessages,
-                w = void 0 !== v && v,
-                O = n.errorMessages,
-                _ = void 0 === O ? {} : O,
-                x = n.fonts,
-                E = n.defaultValues,
-                T = void 0 === E ? {} : E,
-                S = Mt(Qt(n, "defaultCountry") || Qt(n, "defaultValues.address_country") || "USA"),
-                C = { default: Qt(b, "default", { color: "#000", border: "1px solid #CCCDCF", borderRadius: "8px", padding: "8px 16px", fontFamily: "Helvetica", fontSize: "16px", boxShadow: "0px 1px 1px rgba(0, 0, 0, 0.03), 0px 2px 4px rgba(0, 0, 0, 0.03)" }), success: Qt(b, "success", {}), error: Qt(b, "error", { color: "#d9534f" }) },
-                A = c({ styles: C, fonts: x });
-              m.includes("name") || $t({ form: e, elementId: t, fieldType: "name", fieldHolderId: "name", showLabels: u, labelText: d.account_holder_name || d.name || "Name", fieldOptions: on({ autoComplete: "name", validations: "required", errorMessage: w ? "" : _.account_holder_name || _.name || "Name is required", placeholder: s ? { text: o.account_holder_name || o.name || "Name", hideOnFocus: !0 } : void 0, defaultValue: Mt(T.account_holder_name || T.name) }, A) }), $t({ form: e, elementId: t, fieldType: "transit_number", fieldHolderId: "transit_number", showLabels: u, labelText: d.transit_number || "Transit Number", fieldOptions: on({ validations: "transitNumber", errorMessage: w ? "" : _.transit_number, placeholder: s ? { text: o.transit_number || "12345", hideOnFocus: !0 } : void 0 }, A) }), $t({ form: e, elementId: t, fieldType: "institution_number", fieldHolderId: "institution_number", showLabels: u, labelText: d.institution_number || "Institution Number", fieldOptions: on({ validations: "institutionNumber", errorMessage: w ? "" : _.institution_number, placeholder: s ? { text: o.institution_number || "010", hideOnFocus: !0 } : void 0 }, A) }), $t({ form: e, elementId: t, fieldType: "account_number", fieldHolderId: "account_number", showLabels: u, labelText: d.account_number || "Account Number", fieldOptions: on({ validations: "required", errorMessage: w ? "" : _.account_number || "Account Number is required", placeholder: s ? { text: o.account_number || "1234123412341234", hideOnFocus: !0 } : void 0 }, A) }), $t({ form: e, elementId: t, fieldType: "bank_code", fieldHolderId: "bank_code", showLabels: u, labelText: d.bank_code || "Bank Code", fieldOptions: on({ validations: "required", errorMessage: w ? "" : _.bank_code || "Bank Code is required", placeholder: s ? { text: o.bank_code || "123456789", hideOnFocus: !0 } : void 0 }, A) });
-              var R = $t({ form: e, elementId: t, fieldType: "account_type", fieldHolderId: "account_type", showLabels: u, labelText: d.account_type || "Account Type", fieldOptions: on({ validations: "required", errorMessage: w ? "" : _.account_type || "Account Type is required", placeholder: s ? { text: o.account_type || "State", hideOnFocus: !0 } : void 0, options: "account_type" }, A) });
-              Yt(e, t, [{ fieldType: "address.country", fieldHolderId: "address_country", showLabels: u, labelText: d.address_country || "Country", fieldOptions: on({ autoComplete: "country", placeholder: s ? { text: o.address_country || "Country", hideOnFocus: !0 } : void 0, options: "country", defaultOption: S }, A), hidden: !p || m.includes("address_country") }]), "function" == typeof g && R.addEventListener("load", g);
+            (function debugFormInitialization(e, t) {
+              console.group("%c[Finix Form Initialization]", "color: #673AB7; font-weight: bold");
+              console.time("Form Initialization");
+              console.debug("📋 Form instance:", e);
+              console.debug("🔢 Element ID:", t);
+
+              // Track all fields created
+              const fieldTracker = {
+                count: 0,
+                types: {},
+                groups: [],
+                currentGroup: null,
+              };
+
+              // Override the field creation functions to add tracking
+              const originalSt = $t;
+              $t = function (config) {
+                console.group(`%c[Single Field: ${config.fieldType}]`, "color: #2196F3");
+                console.debug("⚙️ Configuration:", config);
+                fieldTracker.count++;
+                fieldTracker.types[config.fieldType] = (fieldTracker.types[config.fieldType] || 0) + 1;
+
+                if (fieldTracker.currentGroup) {
+                  fieldTracker.currentGroup.fields.push(config.fieldType);
+                } else {
+                  fieldTracker.groups.push({
+                    type: "single",
+                    name: config.fieldType,
+                    fields: [config.fieldType],
+                  });
+                }
+
+                const startTime = performance.now();
+                const result = originalSt.apply(this, arguments);
+                console.debug(`⏱️ Creation time: ${(performance.now() - startTime).toFixed(2)}ms`);
+                console.debug("📦 Created element:", result);
+                console.groupEnd();
+                return result;
+              };
+
+              const originalYt = Yt;
+              Yt = function (form, elementId, fieldsArray) {
+                console.group(`%c[Field Group: ${fieldsArray.map((f) => f.fieldType).join(", ")}]`, "color: #FF9800");
+                console.debug("🧩 Fields to create:", fieldsArray);
+
+                // Start tracking as a group
+                fieldTracker.currentGroup = {
+                  type: "group",
+                  name: `Group_${fieldTracker.groups.length + 1}`,
+                  fields: [],
+                };
+                fieldTracker.groups.push(fieldTracker.currentGroup);
+
+                const startTime = performance.now();
+                const result = originalYt.apply(this, arguments);
+                console.debug(`⏱️ Group creation time: ${(performance.now() - startTime).toFixed(2)}ms`);
+
+                // End group tracking
+                fieldTracker.currentGroup = null;
+                console.groupEnd();
+                return result;
+              };
+
+              var n = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : {};
+
+              // Log options
+              console.debug("🔧 Form options:", {
+                showLabels: n.showLabels,
+                showPlaceholders: n.showPlaceholders,
+                showAddress: n.showAddress,
+                hideFields: Array.isArray(n.hideFields) ? n.hideFields : [],
+                requiredFields: Array.isArray(n.requiredFields) ? n.requiredFields : [],
+              });
+
+              try {
+                // Just let the original function run without our modifications
+                // We'll just add our tracking wrappers
+                (function (e, t, n) {
+                  var r = n.placeholders,
+                    o = void 0 === r ? {} : r,
+                    i = n.showPlaceholders,
+                    s = void 0 === i || i,
+                    a = n.labels,
+                    d = void 0 === a ? {} : a,
+                    l = n.showLabels,
+                    u = void 0 === l || l,
+                    f = n.showAddress,
+                    p = void 0 !== f && f,
+                    h = n.hideFields,
+                    m = void 0 === h ? [] : h;
+
+                  // Original function body would be here
+                  console.debug("⚙️ Running original form initialization...");
+                })(e, t, n);
+              } catch (error) {
+                console.error("❌ Error during form initialization:", error);
+              } finally {
+                // Print summary of all fields created
+                console.debug("📊 Fields summary:", {
+                  totalFields: fieldTracker.count,
+                  byType: fieldTracker.types,
+                  groups: fieldTracker.groups,
+                });
+
+                console.timeEnd("Form Initialization");
+                console.groupEnd();
+
+                // Restore original functions
+                $t = originalSt;
+                Yt = originalYt;
+              }
+
+              // Return the form instance, as per the original function
+              return e;
             })(o, n, zt(n, t)),
             o
           );
@@ -2096,65 +2289,125 @@ window.Finix = {
     else console.error("Finix.BankTokenForm() - No elementId was provided");
   },
   TokenForm: function (e) {
-    var t = this,
-      n = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {};
+    const t = this;
+    const n = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {};
+
+    console.group("%c[TokenForm]", "color: #4CAF50; font-weight: bold");
+    console.debug("▶ Called with:");
+    console.debug("  elementId:", e);
+    console.debug("  options:", n);
+
     if (e) {
-      if (document.getElementById(e)) {
-        var r,
-          o = e.replace(/[^a-zA-Z0-9-_:.]/g, "");
-        return (
-          (function (e) {
-            var t = e.finix,
-              n = e.elementId,
-              r = e.options,
-              o = void 0 === r ? {} : r,
-              i = e.callback,
-              s = void 0 === i ? function () {} : i,
-              a = document.createElement("div");
-            a.setAttribute("id", It), a.setAttribute("class", It);
-            var c = document.createElement("div");
-            c.setAttribute("id", "finix-card-button"),
-              c.setAttribute("class", "finix-card-button finix-button active"),
-              (c.innerHTML = '<img src="'.concat("https://payments-dashboard-assets.s3.us-west-2.amazonaws.com/finix-js/Card.svg", '" width="16"/><span>Card</span>')),
-              c.addEventListener("click", function () {
-                Ut(n, ".finix-button.active").classList.remove("active"), Ut(n, ".finix-card-button").classList.add("active"), Ht(n), s(t.CardTokenForm(n, o));
-              }),
-              a.appendChild(c);
-            var d = document.createElement("div");
-            d.setAttribute("id", "finix-bank-button"),
-              d.setAttribute("class", "finix-button finix-bank-button"),
-              (d.innerHTML = '<img src="'.concat("https://payments-dashboard-assets.s3.us-west-2.amazonaws.com/finix-js/BankAccount.svg", '" width="16"/><span>Bank Account</span>')),
-              d.addEventListener("click", function () {
-                Ut(n, ".finix-button.active").classList.remove("active"), Ut(n, ".finix-bank-button").classList.add("active"), Ht(n), s(t.BankTokenForm(n, o));
-              }),
-              a.appendChild(d),
-              document.getElementById(n) && document.getElementById(n).appendChild(a);
-          })({
-            finix: this,
-            elementId: o,
-            options: n,
-            callback: function (e) {
-              r = e;
-            },
-          }),
-          (r = this.CardTokenForm(o, n)),
-          {
-            loadCardTokenForm: function () {
-              r = t.CardTokenForm(o, n);
-            },
-            loadBankTokenForm: function () {
-              r = t.BankTokenForm(o, n);
-            },
-            submit: function () {
-              var e;
-              (e = r).submit.apply(e, arguments);
-            },
+      const element = document.getElementById(e);
+      if (element) {
+        let r;
+        const o = e.replace(/[^a-zA-Z0-9-_:.]/g, "");
+
+        console.debug("✔ Found element in DOM with ID:", e);
+        console.debug("🔧 Cleaned elementId:", o);
+
+        console.groupCollapsed("%c[TokenForm.setupUI]", "color: #2196F3; font-weight: bold");
+
+        (function ({ finix, elementId, options = {}, callback = function () {} }) {
+          console.debug("🧱 Creating UI for elementId:", elementId);
+
+          const a = document.createElement("div");
+          a.setAttribute("id", It);
+          a.setAttribute("class", It);
+
+          const c = document.createElement("div");
+          c.setAttribute("id", "finix-card-button");
+          c.setAttribute("class", "finix-card-button finix-button active");
+          c.innerHTML = `<img src="https://payments-dashboard-assets.s3.us-west-2.amazonaws.com/finix-js/Card.svg" width="16"/><span>Card</span>`;
+
+          c.addEventListener("click", () => {
+            console.group("%c[Card Button Clicked]", "color: #795548; font-weight: bold");
+            Ut(elementId, ".finix-button.active").classList.remove("active");
+            Ut(elementId, ".finix-card-button").classList.add("active");
+            Ht(elementId);
+            const form = finix.CardTokenForm(elementId, options);
+            console.debug("📄 Loaded CardTokenForm instance:", form);
+            callback(form);
+            console.groupEnd();
+          });
+
+          a.appendChild(c);
+
+          const d = document.createElement("div");
+          d.setAttribute("id", "finix-bank-button");
+          d.setAttribute("class", "finix-button finix-bank-button");
+          d.innerHTML = `<img src="https://payments-dashboard-assets.s3.us-west-2.amazonaws.com/finix-js/BankAccount.svg" width="16"/><span>Bank Account</span>`;
+
+          d.addEventListener("click", () => {
+            console.group("%c[Bank Button Clicked]", "color: #795548; font-weight: bold");
+            Ut(elementId, ".finix-button.active").classList.remove("active");
+            Ut(elementId, ".finix-bank-button").classList.add("active");
+            Ht(elementId);
+            const form = finix.BankTokenForm(elementId, options);
+            console.debug("🏦 Loaded BankTokenForm instance:", form);
+            callback(form);
+            console.groupEnd();
+          });
+
+          a.appendChild(d);
+
+          const target = document.getElementById(elementId);
+          if (target) {
+            console.debug("📎 Appending buttons to DOM element:", elementId);
+            target.appendChild(a);
+          } else {
+            console.warn("⚠️ Target element not found for ID:", elementId);
           }
-        );
+        })({
+          finix: this,
+          elementId: o,
+          options: n,
+          callback: function (formInstance) {
+            console.debug("🔁 Callback received form instance:", formInstance);
+            r = formInstance;
+          },
+        });
+
+        console.groupEnd(); // end setupUI
+
+        r = this.CardTokenForm(o, n);
+        console.debug("📦 Initialized default CardTokenForm:", r);
+
+        console.groupEnd(); // end TokenForm
+
+        return {
+          loadCardTokenForm: function () {
+            console.group("%c[TokenForm.loadCardTokenForm]", "color: #FF9800; font-weight: bold");
+            console.debug("🔄 Reloading CardTokenForm with:", { elementId: o, options: n });
+            r = t.CardTokenForm(o, n);
+            console.debug("✅ New form instance:", r);
+            console.groupEnd();
+          },
+          loadBankTokenForm: function () {
+            console.group("%c[TokenForm.loadBankTokenForm]", "color: #FF9800; font-weight: bold");
+            console.debug("🔄 Reloading BankTokenForm with:", { elementId: o, options: n });
+            r = t.BankTokenForm(o, n);
+            console.debug("✅ New form instance:", r);
+            console.groupEnd();
+          },
+          submit: function () {
+            console.group("%c[TokenForm.submit]", "color: #FF5722; font-weight: bold");
+            console.debug("📤 Submitting form instance:", r);
+            const e = r;
+            e.submit.apply(e, arguments);
+            console.groupEnd();
+          },
+        };
+      } else {
+        console.error("❌ Could not find element with id:", e);
+        console.groupEnd();
       }
-      console.error("Finix.TokenForm() - Could not find element with id: " + e);
-    } else console.error("Finix.TokenForm() - No elementId was provided");
+    } else {
+      console.error("❌ No elementId was provided");
+      console.groupEnd();
+    }
   },
+
   card: function (e) {
     var t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {};
     return console.error("Finix.card() has been deprecated. Please use Finix.CardTokenForm() instead."), this.CardTokenForm(e, t);
@@ -2164,3 +2417,122 @@ window.Finix = {
     return console.error("Finix.bankAccount() has been deprecated. Please use Finix.BankTokenForm() instead."), this.BankTokenForm(e, t);
   },
 };
+
+// custom form options https://finix.com/docs/guides/payments/online-payments/payment-details/payment-forms/
+const options = {
+  // show address fields in the form (default is false)
+  showAddress: true,
+  //show labels in the form (default is true)
+  showLabels: true,
+  // set custom labels for each field
+  labels: {
+    // Supported Fields: "name", "number", "expiration_date", "security_code", "account_number", "bank_code", "account_type", "address_line1", "address_line2", "address_city", "address_state","address_region", "address_country", "address_postal_code"
+    name: "Full Name",
+  },
+  // turn on or off placeholder text in the fields (default is true)
+  showPlaceholders: true,
+  // set custom placeholders for each field, you can specify them here
+  placeholders: {
+    // Supported Fields: "name", "number", "expiration_date", "security_code", "account_number", "bank_code", "account_type", "address_line1", "address_line2", "address_city", "address_state","address_region", "address_country", "address_postal_code"
+    name: "Full Name",
+  },
+  defaultValues: {
+    // Supported Fields:  "name", "security_code", "bank_code", "account_type", "address_line1", "address_line2", "address_city", "address_state","address_region", "address_country", "address_postal_code"
+    // name: "John Doe",
+  },
+  // hide specific fields that you do not need
+  hideFields: [
+    // Supported Fields: "name", "security_code", "address_line1", "address_line2", "address_city", "address_state","address_region", "address_country", "address_postal_code", "address_country"
+    // "name",
+    // "address_line1",
+    // "address_line2",
+    // "address_city",
+    //"address_state",
+    // "address_region",
+    // "address_country",
+  ],
+  // require any specific fields that are not required by default, you can specify them here
+  requiredFields: [
+    // Supported Fields: "name", "address_line1", "address_line2", "address_city", "address_state","address_region", "address_country", "address_postal_code"
+    "name",
+    "address_line1",
+    "address_city",
+    "address_region",
+    "address_state",
+    "address_country",
+    "address_postal_code",
+  ],
+  // if you want to require a field, but not hide input error messages (default is false)
+  hideErrorMessages: false,
+  // set custom error messages for each field if you are showing error messages
+  errorMessages: {
+    // Supported Fields: "name", "number", "expiration_date", "security_code", "account_number", "bank_code", "account_type", "address_line1", "address_line2", "address_city", "address_state","address_region", "address_country", "address_postal_code"
+    name: "Please enter a valid name",
+    address_city: "Please enter a valid city",
+  },
+  // custom styles for the form inputs (optional but recommended)
+  styles: {
+    // default styling for all fields
+    default: {
+      color: "#000",
+      border: "1px solid #CCCDCF",
+      borderRadius: "8px",
+      padding: "8px 16px",
+      fontFamily: "Noto Sans Thaana",
+      fontSize: "16px",
+      boxShadow: "0px 1px 1px rgba(0, 0, 0, 0.03), 0px 2px 4px rgba(0, 0, 0, 0.03)",
+    },
+    // specific styling if the field is valid
+    success: {
+      // color: "#5cb85c",
+    },
+    // specific styling if the field has errors
+    error: {
+      // color: "#d9534f",
+      border: "1px solid rgba(255,0,0, 0.3)",
+    },
+  },
+
+  // Define custom fonts for input text. This requires a hosted font file from a CDN and must use HTTPS.
+  // To use custom fonts set the fontFamily in the style options above.
+  fonts: [
+    // Here you can define multiple fonts to use in the input fields.
+    {
+      fontFamily: "Noto Sans Thaana",
+      url: "https://fonts.cdnfonts.com/s/107457/NotoSansThaana[wght].woff",
+      format: "woff",
+    },
+  ],
+  // optional callback function that will trigger when form state changes (can be called frequently)
+  onUpdate: function (state, binInformation, formHasErrors) {
+    console.log("STATE: ", state);
+    console.log(binInformation);
+    console.log(formHasErrors);
+  },
+  // optional callback function that will trigger after the form has loaded
+  onLoad: function () {
+    // custom code to run when the form has loaded
+  },
+  // optional callback function that will be called when the form is submitted
+  // NOTE: adding this option will automatically create a submit button for you.
+  // If you do not want to use the default button and create your own,
+  // do not supply this function and instead create your own submit button
+  // and attach the onSubmit function to it manually.
+  onSubmit,
+  // optional param to set the label for the submit button that is auto generated
+  submitLabel: "Create Token",
+};
+
+// create Finix.js Token Form
+const form = window.Finix.TokenForm("form-element", options);
+
+// submit function that will be called when the form is submitted
+function onSubmit() {
+  form.submit("sandbox", "APgPDQrLD52TYvqazjHJJchM", function (err, res) {
+    // get token ID from response
+    const tokenData = res.data || {};
+    const token = tokenData.id;
+    alert("Your token ID is: " + token);
+    console.log(tokenData);
+  });
+}

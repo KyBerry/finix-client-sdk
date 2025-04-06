@@ -1,13 +1,12 @@
-import { Environment, InitializationStatus, FormOptions, FormId, PaymentType, TokenId, FieldName, FormState, FieldOptions, FormError } from "./types";
+import { Environment, InitializationStatus, FormOptions, FormId, PaymentType, TokenId, FieldName, FieldState, FormField, FormState, FieldOptions, FormError } from "./types";
 import { createBrandedId, generateTimestampedId } from "../utils/uuid";
 import { FraudDetection } from "./fraud-detection";
 import { IframeManager } from "./iframe-manager";
 import { createFormReducer, RootAction } from "../state/reducers/rootReducer";
 import { Store } from "../state/store";
-import { updateField, focusField, blurField } from "../state/actions/fieldActions";
-import { submitForm, submitFormSuccess, submitFormError, resetForm } from "../state/actions/formActions";
+import { updateField } from "../state/actions/fieldActions";
+import { submitForm, submitFormSuccess, submitFormError } from "../state/actions/formActions";
 import { updateBinInformation } from "../state/actions/binInfoActions";
-import { detectCardBrand } from "./validators";
 
 /**
  * Main entry point for the Finix SDK
@@ -16,6 +15,7 @@ import { detectCardBrand } from "./validators";
 export class Finix {
   private readonly merchantId: string;
   private readonly environment: Environment.Type;
+  private elementId: string | null = null;
   private sessionId: string | null = null;
   private initPromise: Promise<void> | null = null;
   private status: InitializationStatus = InitializationStatus.NOT_STARTED;
@@ -168,21 +168,9 @@ class PaymentForm {
   private setupMessageListeners(): void {
     this.unsubscribeListener = this.iframeManager.setupMessageListener((message) => {
       if (message.messageName === "field-updated") {
-        const { name, state } = message.messageData as any;
-
+        const { name, state } = message.messageData as FormField;
         // Update field state
-        this.store.dispatch(updateField(this.formId, name as FieldName, state.value || ""));
-
-        // Handle BIN detection for card forms
-        if (this.paymentType === "card" && name === "number" && state.value) {
-          const cardBrand = detectCardBrand(state.value);
-          this.store.dispatch(
-            updateBinInformation(this.formId, {
-              bin: state.value.slice(0, 6),
-              cardBrand,
-            }),
-          );
-        }
+        this.store.dispatch(updateField(this.formId, name, state));
       } else if (message.messageName === "form-submit") {
         // Handle form submission
         if (this.onSubmitHandler) {
@@ -200,17 +188,29 @@ class PaymentForm {
    */
   private renderForm(): void {
     // Get the container element
-    const container = document.getElementById(this.elementId);
-    if (!container) {
+    const formEl = document.getElementById(this.elementId);
+
+    if (!formEl) {
       throw new Error(`Element with ID "${this.elementId}" not found`);
     }
 
-    // Clear the container
-    container.innerHTML = "";
+    const containerEl = document.createElement("div");
+    containerEl.id = "finix-form-container";
+    containerEl.classList.add("finix-form-container");
 
     // TODO: Implement form rendering based on payment type
     // This would create all the necessary field iframes and UI elements
   }
+
+  private renderCardForm(formId: string): void {}
+
+  private renderBankForm(formId: string): void {}
+
+  private renderCardFields(): void {}
+
+  private renderBankFields(): void {}
+
+  private renderAddressFields(): void {}
 
   /**
    * Create a field iframe and add it to the form
@@ -283,13 +283,6 @@ class PaymentForm {
 
     // Submit the form with empty additional data
     this.submitWithData(environment, applicationId, {}, callback);
-  }
-
-  /**
-   * Reset the form state
-   */
-  public reset(): void {
-    this.store.dispatch(resetForm(this.formId));
   }
 
   /**

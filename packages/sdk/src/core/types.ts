@@ -93,31 +93,6 @@ export enum BANK_FIELD_TYPE {
 }
 
 /**
- * Default error messages by field
- */
-export const DEFAULT_ERROR_MESSAGES: Record<string, string> = {
-  // Card fields
-  [CARD_FIELD_TYPE.NUMBER]: "Please enter a valid card number",
-  [CARD_FIELD_TYPE.EXPIRATION_DATE]: "Please enter a valid expiration date",
-  [CARD_FIELD_TYPE.SECURITY_CODE]: "Please enter a valid security code",
-  [CARD_FIELD_TYPE.NAME]: "Please enter the cardholder name",
-
-  // Bank fields
-  [BANK_FIELD_TYPE.ACCOUNT_NUMBER]: "Please enter a valid account number",
-  [BANK_FIELD_TYPE.ROUTING_NUMBER]: "Please enter a valid routing number",
-  [BANK_FIELD_TYPE.BANK_CODE]: "Please enter a valid bank code",
-  [BANK_FIELD_TYPE.TRANSIT_NUMBER]: "Please enter a valid transit number",
-  [BANK_FIELD_TYPE.INSTITUTION_NUMBER]: "Please enter a valid institution number",
-
-  // Address fields
-  [ADDRESS_FIELD_TYPE.LINE1]: "Please enter a valid address",
-  [ADDRESS_FIELD_TYPE.CITY]: "Please enter a valid city",
-  [ADDRESS_FIELD_TYPE.STATE]: "Please enter a valid state",
-  [ADDRESS_FIELD_TYPE.POSTAL_CODE]: "Please enter a valid postal code",
-  [ADDRESS_FIELD_TYPE.COUNTRY]: "Please select a country",
-};
-
-/**
  * Branded types for stronger type checking
  */
 export type FormId = string & { readonly _brand: unique symbol };
@@ -207,22 +182,28 @@ export type Fonts = readonly Font[];
 /**
  * Represents the state of an individual form field.
  */
-export interface FieldState {
-  /** The current value of the field */
-  readonly value: string;
+export type FieldState = {
   /** Whether the field currently has focus */
   readonly isFocused: boolean;
   /** Whether the field has been modified by the user */
   readonly isDirty: boolean;
-  /** Whether the field's current value passes validation */
-  readonly isValid: boolean;
   /** Error messages if validation fails */
   readonly errorMessages: string[];
   /** Selected option for dropdown fields */
   readonly selected?: string;
   /** Selected country for country fields */
   readonly country?: string;
-}
+};
+
+/**
+ * Represents a form field with its name and state
+ */
+export type FormField = {
+  /** The name/identifier of the field */
+  readonly name: string;
+  /** The current state of the field */
+  readonly state: FieldState;
+};
 
 /**
  * BIN information returned from card network lookup.
@@ -393,7 +374,7 @@ export interface FormState<T extends PaymentType = PaymentType> {
   /** The type of payment this form handles */
   readonly paymentType: T;
   /** Collection of all fields in the form */
-  readonly fields: Readonly<Record<string, FieldState>>;
+  readonly fields: Readonly<Record<string, FormField>>;
   /** BIN information if this is a card form */
   readonly binInformation: BinInformation;
   /** Whether this form is currently submitting */

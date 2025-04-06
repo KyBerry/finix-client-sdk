@@ -41,19 +41,9 @@ export interface FormSubmitErrorAction {
 }
 
 /**
- * Action type for resetting form state
- */
-export interface FormResetAction {
-  readonly type: typeof FORM_RESET;
-  readonly payload: {
-    readonly formId: FormId;
-  };
-}
-
-/**
  * Union type of all form-related actions
  */
-export type FormAction = FormSubmitAction | FormSubmitSuccessAction | FormSubmitErrorAction | FormResetAction;
+export type FormAction = FormSubmitAction | FormSubmitSuccessAction | FormSubmitErrorAction;
 
 /**
  * Create an action to initiate form submission
@@ -90,17 +80,5 @@ export function submitFormError(formId: FormId, errors: readonly FormError[]): F
   return {
     type: FORM_SUBMIT_ERROR,
     payload: { formId, errors },
-  };
-}
-
-/**
- * Create an action to reset the form state
- * @param formId The form ID
- * @returns A form reset action
- */
-export function resetForm(formId: FormId): FormResetAction {
-  return {
-    type: FORM_RESET,
-    payload: { formId },
   };
 }
