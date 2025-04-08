@@ -1,4 +1,4 @@
-import { Environment } from "./types";
+import { API_URLS, BEACON_KEYS, FINIX_ENVIRONMENT } from "@/types";
 
 /**
  * Declares the global _sift array for TypeScript
@@ -25,7 +25,7 @@ export class FraudDetection {
    * @param environment The Finix environment
    * @returns A promise that resolves with the session ID
    */
-  public static async setup(merchantId: string, environment: Environment.Type): Promise<string> {
+  public static async setup(merchantId: string, environment: FINIX_ENVIRONMENT): Promise<string> {
     // Skip API call in server environment
     if (!isBrowser) {
       return "ssr-placeholder";
@@ -36,7 +36,7 @@ export class FraudDetection {
       const sessionId = await this.createSession(merchantId, environment);
 
       // 2. Get the beacon key
-      const beaconKey = Environment.BeaconKeys[environment];
+      const beaconKey = BEACON_KEYS[environment];
 
       // 3. Initialize Sift Science with the session
       await this.initializeSift(sessionId, beaconKey);
@@ -51,7 +51,7 @@ export class FraudDetection {
 
       // Try to initialize with fallback values
       try {
-        const beaconKey = Environment.BeaconKeys[environment];
+        const beaconKey = BEACON_KEYS[environment];
         await this.initializeSift(fallbackSessionId, beaconKey);
       } catch (initError) {
         console.warn("Failed to initialize Sift with fallback values", initError);
@@ -67,6 +67,12 @@ export class FraudDetection {
   private static async initializeSift(sessionId: string, beaconKey: string): Promise<void> {
     return new Promise<void>((resolve) => {
       try {
+        // Check if Sift is already loaded or being loaded
+        if (document.querySelector('script[src="https://cdn.sift.com/s.js"]')) {
+          console.log("Sift script already loaded or loading, skipping...");
+          return resolve();
+        }
+
         // Initialize the _sift array if it doesn't exist
         const _sift = (window._sift = window._sift || []);
 
@@ -102,9 +108,9 @@ export class FraudDetection {
   /**
    * Private method to create a session with the Finix fraud detection service
    */
-  private static async createSession(merchantId: string, environment: Environment.Type): Promise<string> {
+  private static async createSession(merchantId: string, environment: FINIX_ENVIRONMENT): Promise<string> {
     // Get the API URL for the current environment
-    const apiUrl = Environment.ApiUrls[environment];
+    const apiUrl = API_URLS[environment];
 
     // Make the API call to create a session
     const response = await fetch(`${apiUrl}/fraud/sessions?merchant_id=${encodeURIComponent(merchantId)}`);

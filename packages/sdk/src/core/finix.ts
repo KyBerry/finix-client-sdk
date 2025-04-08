@@ -1,5 +1,3 @@
-import { Environment, InitializationStatus, FormOptions, FormId, PaymentType, TokenId, FieldName, FieldState, FormField, FormState, FieldOptions, FormError } from "./types";
-import { createBrandedId, generateTimestampedId } from "../utils/uuid";
 import { FraudDetection } from "./fraud-detection";
 import { IframeManager } from "./iframe-manager";
 import { createFormReducer, RootAction } from "../state/reducers/rootReducer";
@@ -8,26 +6,34 @@ import { updateField } from "../state/actions/fieldActions";
 import { submitForm, submitFormSuccess, submitFormError } from "../state/actions/formActions";
 import { updateBinInformation } from "../state/actions/binInfoActions";
 
+import { DEFAULT_PRESETS } from "@/presets";
+import { FINIX_ENVIRONMENT, INIT_STATUS } from "@/types";
+import { createBrandedId, deepMerge, generateTimestampedId } from "@/utils";
+
+import type { DefaultPresets, FinixConfigOptions, FinixTokenFormOptions, FormId } from "@/types";
+
 /**
  * Main entry point for the Finix SDK
  * Handles form creation, state management, and secure payment processing
  */
 export class Finix {
-  private readonly merchantId: string;
-  private readonly environment: Environment.Type;
-  private elementId: string | null = null;
   private sessionId: string | null = null;
   private initPromise: Promise<void> | null = null;
-  private status: InitializationStatus = InitializationStatus.NOT_STARTED;
+  private status: INIT_STATUS = INIT_STATUS.NOT_STARTED;
+  private readonly finixConfigOptions: FinixConfigOptions;
 
   /**
    * Create a new Finix SDK instance
    * @param merchantId Merchant identifier
    * @param environment Finix environment
    */
-  constructor(merchantId: string, environment: Environment.Type = Environment.Type.SANDBOX) {
-    this.merchantId = merchantId;
-    this.environment = environment;
+  constructor({ applicationId, environment = FINIX_ENVIRONMENT.SANDBOX, merchantId }: FinixConfigOptions) {
+    this.finixConfigOptions = {
+      applicationId,
+      environment,
+      merchantId,
+    };
+
     this.initPromise = this.initialize();
   }
 
@@ -37,264 +43,291 @@ export class Finix {
    */
   private async initialize(): Promise<void> {
     try {
-      this.status = InitializationStatus.INITIALIZING;
+      this.status = INIT_STATUS.INITIALIZING;
+
+      const { merchantId, environment } = this.finixConfigOptions;
 
       // Create a fraud session
-      this.sessionId = await FraudDetection.setup(this.merchantId, this.environment);
+      this.sessionId = await FraudDetection.setup(merchantId, environment);
 
       // Mark initialization as complete
-      this.status = InitializationStatus.READY;
+      this.status = INIT_STATUS.READY;
     } catch (error) {
       console.error("Failed to initialize Finix SDK:", error);
-      this.status = InitializationStatus.FAILED;
+      this.status = INIT_STATUS.FAILED;
       throw error;
     }
   }
 
-  /**
-   * Create a card token form
-   * @param elementId HTML element ID to mount the form
-   * @param options Form options
-   * @returns A payment form instance
-   */
-  public async CardTokenForm(elementId: string, options: FormOptions): Promise<PaymentForm> {
-    return await this.createForm("card", elementId, options);
-  }
+  private async readyStatus(): Promise<void> {
+    if (this.initPromise) await this.initPromise;
 
-  /**
-   * Create a bank token form
-   * @param elementId HTML element ID to mount the form
-   * @param options Form options
-   * @returns A payment form instance
-   */
-  public async BankTokenForm(elementId: string, options: FormOptions): Promise<PaymentForm> {
-    return await this.createForm("bankAccount", elementId, options);
-  }
-
-  /**
-   * Create a payment form
-   * @param paymentType Type of payment form
-   * @param elementId HTML element ID to mount the form
-   * @param options Form options
-   * @returns A payment form instance
-   */
-  private async createForm(paymentType: PaymentType, elementId: string, options: FormOptions): Promise<PaymentForm> {
-    if (this.initPromise) {
-      await this.initPromise;
-    }
-
-    // Ensure the SDK is initialized
-    if (this.status !== InitializationStatus.READY || !this.sessionId) {
+    if (this.status !== INIT_STATUS.READY || !this.sessionId) {
       throw new Error("Finix SDK not initialized");
     }
-
-    // Create a form ID
-    const formId = createBrandedId<FormId>(generateTimestampedId(`form-${paymentType}-`));
-
-    // Create a PaymentForm instance
-    return new PaymentForm(formId, paymentType, elementId, this.sessionId, options);
   }
+
+  private async createForm(type: "card" | "bank" | "token", options: { preset?: DefaultPresets; customOptions: Partial<FinixTokenFormOptions> }) {
+    const { preset = "base", customOptions } = options;
+
+    // Ensure SDK is initialized
+    await this.readyStatus();
+
+    const formId = createBrandedId<FormId>(generateTimestampedId(`form-${type}-`));
+    const formOptions = deepMerge(DEFAULT_PRESETS[preset], customOptions);
+  }
+
+  // /**
+  //  * Create a card token form
+  //  * @param elementId HTML element ID to mount the form
+  //  * @param options Form options
+  //  * @returns A payment form instance
+  //  */
+  // public async CardTokenForm(elementId: string, options: FormOptions): Promise<PaymentForm> {
+  //   return await this.createForm("card", elementId, options);
+  // }
+
+  // /**
+  //  * Create a bank token form
+  //  * @param elementId HTML element ID to mount the form
+  //  * @param options Form options
+  //  * @returns A payment form instance
+  //  */
+  // public async BankTokenForm(elementId: string, options: FormOptions): Promise<PaymentForm> {
+  //   return await this.createForm("bankAccount", elementId, options);
+  // }
+
+  // /**
+  //  * Create a payment form
+  //  * @param paymentType Type of payment form
+  //  * @param elementId HTML element ID to mount the form
+  //  * @param options Form options
+  //  * @returns A payment form instance
+  //  */
+  // private async createForm(paymentType: PaymentType, elementId: string, options: FormOptions): Promise<PaymentForm> {
+  //   if (this.initPromise) {
+  //     await this.initPromise;
+  //   }
+
+  //   // Ensure the SDK is initialized
+  //   if (this.status !== INIT_STATUS.READY || !this.sessionId) {
+  //     throw new Error("Finix SDK not initialized");
+  //   }
+
+  //   // Create a form ID
+  //   const formId = createBrandedId<FormId>(generateTimestampedId(`form-${paymentType}-`));
+
+  //   console.log("FORM_ID: ", formId);
+
+  //   // Create a PaymentForm instance
+  //   return new PaymentForm(formId, paymentType, elementId, this.sessionId, options);
+  // }
 }
 
-/**
- * Represents a payment form (card or bank account)
- * Manages state, iframe communication, and tokenization
- */
-class PaymentForm {
-  private readonly formId: FormId;
-  private readonly paymentType: PaymentType;
-  private readonly elementId: string;
-  private readonly sessionId: string;
-  private readonly options: FormOptions;
-  private readonly iframeManager: IframeManager;
-  private readonly store: Store<FormState, RootAction>;
-  private onSubmitHandler?: () => void;
-  private unsubscribeListener?: () => void;
+// /**
+//  * Represents a payment form (card or bank account)
+//  * Manages state, iframe communication, and tokenization
+//  */
+// class PaymentForm {
+//   private readonly formId: FormId;
+//   private readonly paymentType: PaymentType;
+//   private readonly elementId: string;
+//   private readonly sessionId: string;
+//   private readonly options: FormOptions;
+//   private readonly iframeManager: IframeManager;
+//   private readonly store: Store<FormState, RootAction>;
+//   private onSubmitHandler?: () => void;
+//   private unsubscribeListener?: () => void;
 
-  /**
-   * Create a new payment form
-   * @param formId Form identifier
-   * @param paymentType Type of payment form
-   * @param elementId HTML element ID to mount the form
-   * @param environment Finix environment
-   * @param sessionKey Session key for fraud detection
-   * @param options Form options
-   */
-  constructor(formId: FormId, paymentType: PaymentType, elementId: string, sessionId: string, options: FormOptions) {
-    this.formId = formId;
-    this.paymentType = paymentType;
-    this.elementId = elementId;
-    this.sessionId = sessionId;
+//   /**
+//    * Create a new payment form
+//    * @param formId Form identifier
+//    * @param paymentType Type of payment form
+//    * @param elementId HTML element ID to mount the form
+//    * @param environment Finix environment
+//    * @param sessionKey Session key for fraud detection
+//    * @param options Form options
+//    */
+//   constructor(formId: FormId, paymentType: PaymentType, elementId: string, sessionId: string, options: FormOptions) {
+//     this.formId = formId;
+//     this.paymentType = paymentType;
+//     this.elementId = elementId;
+//     this.sessionId = sessionId;
 
-    // Set up options with defaults
-    this.options = {
-      environment: options.environment,
-      applicationId: options.applicationId || "",
-      showLabels: options.showLabels !== false,
-      showPlaceholders: options.showPlaceholders !== false,
-      showAddress: options.showAddress || false,
-      hideFields: options.hideFields || [],
-      styles: options.styles || {},
-      fonts: options.fonts || [],
-      onReady: options.onReady,
-      onUpdate: options.onUpdate,
-      onSubmit: options.onSubmit,
-      submitLabel: options.submitLabel || "Submit",
-    };
+//     // Set up options with defaults
+//     this.options = {
+//       environment: options.environment,
+//       applicationId: options.applicationId || "",
+//       showLabels: options.showLabels !== false,
+//       showPlaceholders: options.showPlaceholders !== false,
+//       showAddress: options.showAddress || false,
+//       hideFields: options.hideFields || [],
+//       styles: options.styles || {},
+//       fonts: options.fonts || [],
+//       onReady: options.onReady,
+//       onUpdate: options.onUpdate,
+//       onSubmit: options.onSubmit,
+//       submitLabel: options.submitLabel || "Submit",
+//     };
 
-    // Create the iframe manager
-    this.iframeManager = new IframeManager(formId, paymentType, this.options.environment);
+//     // Create the iframe manager
+//     this.iframeManager = new IframeManager(formId, paymentType, this.options.environment);
 
-    // Create the store
-    const formReducer = createFormReducer(formId, paymentType, this.options);
+//     // Create the store
+//     const formReducer = createFormReducer(formId, paymentType, this.options);
 
-    this.store = new Store<FormState, RootAction>(undefined, formReducer, {
-      enableTimeTravel: false,
-      errorHandler: (error, phase, context) => {
-        console.error(`Error in ${phase} phase:`, error, context);
-      },
-    });
+//     this.store = new Store<FormState, RootAction>(undefined, formReducer, {
+//       enableTimeTravel: false,
+//       errorHandler: (error, phase, context) => {
+//         console.error(`Error in ${phase} phase:`, error, context);
+//       },
+//     });
 
-    // Set up message listeners
-    this.setupMessageListeners();
+//     // Set up message listeners
+//     this.setupMessageListeners();
 
-    // Render the form
-    this.renderForm();
-  }
+//     // Render the form
+//     this.renderForm();
+//   }
 
-  /**
-   * Set up message listeners for iframe communication
-   */
-  private setupMessageListeners(): void {
-    this.unsubscribeListener = this.iframeManager.setupMessageListener((message) => {
-      if (message.messageName === "field-updated") {
-        const { name, state } = message.messageData as FormField;
-        // Update field state
-        this.store.dispatch(updateField(this.formId, name, state));
-      } else if (message.messageName === "form-submit") {
-        // Handle form submission
-        if (this.onSubmitHandler) {
-          this.onSubmitHandler();
-        }
-      } else if (message.messageName === "bin-information-received") {
-        // Handle BIN information
-        this.store.dispatch(updateBinInformation(this.formId, message.messageData as any));
-      }
-    });
-  }
+//   /**
+//    * Set up message listeners for iframe communication
+//    */
+//   private setupMessageListeners(): void {
+//     console.log("I ran setup message listeners");
+//     this.unsubscribeListener = this.iframeManager.setupMessageListener((message) => {
+//       if (message.messageName === "field-updated") {
+//         const { name, state } = message.messageData as FormField;
+//         // Update field state
+//         this.store.dispatch(updateField(this.formId, name, state));
+//       } else if (message.messageName === "form-submit") {
+//         // Handle form submission
+//         if (this.onSubmitHandler) {
+//           this.onSubmitHandler();
+//         }
+//       } else if (message.messageName === "bin-information-received") {
+//         // Handle BIN information
+//         this.store.dispatch(updateBinInformation(this.formId, message.messageData as any));
+//       }
+//     });
+//   }
 
-  /**
-   * Render the form in the DOM
-   */
-  private renderForm(): void {
-    // Get the container element
-    const formEl = document.getElementById(this.elementId);
+//   /**
+//    * Render the form in the DOM
+//    */
+//   private renderForm(): void {
+//     // Get the container element
+//     const formEl = document.getElementById(this.elementId);
 
-    if (!formEl) {
-      throw new Error(`Element with ID "${this.elementId}" not found`);
-    }
+//     if (!formEl) {
+//       throw new Error(`Element with ID "${this.elementId}" not found`);
+//     }
 
-    const containerEl = document.createElement("div");
-    containerEl.id = "finix-form-container";
-    containerEl.classList.add("finix-form-container");
+//     const containerEl = document.createElement("div");
+//     containerEl.id = "finix-form-container";
+//     containerEl.classList.add("finix-form-container");
 
-    // TODO: Implement form rendering based on payment type
-    // This would create all the necessary field iframes and UI elements
-  }
+//     formEl.appendChild(containerEl);
 
-  private renderCardForm(formId: string): void {}
+//     // TODO: Implement form rendering based on payment type
+//     // This would create all the necessary field iframes and UI elements
+//   }
 
-  private renderBankForm(formId: string): void {}
+//   private renderCardForm(formId: string): void {}
 
-  private renderCardFields(): void {}
+//   private renderBankForm(formId: string): void {}
 
-  private renderBankFields(): void {}
+//   private renderCardFields(): void {
+//     this.iframeManager.createFieldIframe("");
+//   }
 
-  private renderAddressFields(): void {}
+//   private renderBankFields(): void {}
 
-  /**
-   * Create a field iframe and add it to the form
-   * @param fieldType Type of field
-   * @param options Field options
-   * @returns The created iframe
-   */
-  public field(fieldType: string, options: FieldOptions): HTMLIFrameElement {
-    const iframe = this.iframeManager.createFieldIframe(fieldType, options);
-    return iframe;
-  }
+//   private renderAddressFields(): void {}
 
-  /**
-   * Set a submission handler for the form
-   * @param handler Function to call when the form is submitted
-   */
-  public onSubmit(handler: () => void): void {
-    this.onSubmitHandler = handler;
-  }
+//   /**
+//    * Create a field iframe and add it to the form
+//    * @param fieldType Type of field
+//    * @param options Field options
+//    * @returns The created iframe
+//    */
+//   public field(fieldType: string, options: FieldOptions): HTMLIFrameElement {
+//     const iframe = this.iframeManager.createFieldIframe(fieldType, options);
+//     return iframe;
+//   }
 
-  /**
-   * Submit the form with additional data
-   * @param environment Finix environment
-   * @param applicationId Application ID
-   * @param data Additional data to submit
-   * @param callback Callback function for submission result
-   */
-  public submitWithData(environment: Environment.Type, applicationId: string, data: Record<string, unknown> = {}, callback: (error: FormError | null, response?: { id: string }) => void): void {
-    // Dispatch submission action
-    this.store.dispatch(submitForm(this.formId));
+//   /**
+//    * Set a submission handler for the form
+//    * @param handler Function to call when the form is submitted
+//    */
+//   public onSubmit(handler: () => void): void {
+//     this.onSubmitHandler = handler;
+//   }
 
-    // Submit the form data through the iframe manager
-    this.iframeManager
-      .submitWithData(environment, applicationId, this.sessionId, data)
-      .then((response) => {
-        // Handle success
-        const tokenId = createBrandedId<TokenId>(response.id);
-        this.store.dispatch(submitFormSuccess(this.formId, tokenId));
-        callback(null, response);
-      })
-      .catch((error) => {
-        // Handle error
-        const formattedError: FormError = {
-          code: error.code || "UNKNOWN_ERROR",
-          message: error.message || "An unknown error occurred",
-          details: error,
-        };
-        this.store.dispatch(submitFormError(this.formId, [formattedError]));
-        callback(formattedError);
-      });
-  }
+//   /**
+//    * Submit the form with additional data
+//    * @param environment Finix environment
+//    * @param applicationId Application ID
+//    * @param data Additional data to submit
+//    * @param callback Callback function for submission result
+//    */
+//   public submitWithData(environment: Environment.Type, applicationId: string, data: Record<string, unknown> = {}, callback: (error: FormError | null, response?: { id: string }) => void): void {
+//     // Dispatch submission action
+//     this.store.dispatch(submitForm(this.formId));
 
-  /**
-   * Submit the form with application ID
-   * @param environment Finix environment
-   * @param applicationId Application ID
-   * @param callback Callback function for submission result
-   */
-  public submit(environment: Environment.Type, applicationId: string, callback: (error: FormError | null, response?: { id: string }) => void): void {
-    // Validate required parameters
-    if (!environment) {
-      console.error("submit() - No environment was provided");
-      return;
-    }
+//     // Submit the form data through the iframe manager
+//     this.iframeManager
+//       .submitWithData(environment, applicationId, this.sessionId, data)
+//       .then((response) => {
+//         // Handle success
+//         const tokenId = createBrandedId<TokenId>(response.id);
+//         this.store.dispatch(submitFormSuccess(this.formId, tokenId));
+//         callback(null, response);
+//       })
+//       .catch((error) => {
+//         // Handle error
+//         const formattedError: FormError = {
+//           code: error.code || "UNKNOWN_ERROR",
+//           message: error.message || "An unknown error occurred",
+//           details: error,
+//         };
+//         this.store.dispatch(submitFormError(this.formId, [formattedError]));
+//         callback(formattedError);
+//       });
+//   }
 
-    if (!applicationId) {
-      console.error("submit() - No applicationId was provided");
-      return;
-    }
+//   /**
+//    * Submit the form with application ID
+//    * @param environment Finix environment
+//    * @param applicationId Application ID
+//    * @param callback Callback function for submission result
+//    */
+//   public submit(environment: FINIX_ENVIRONMENT, applicationId: string, callback: (error: FormError | null, response?: { id: string }) => void): void {
+//     // Validate required parameters
+//     if (!environment) {
+//       console.error("submit() - No environment was provided");
+//       return;
+//     }
 
-    // Submit the form with empty additional data
-    this.submitWithData(environment, applicationId, {}, callback);
-  }
+//     if (!applicationId) {
+//       console.error("submit() - No applicationId was provided");
+//       return;
+//     }
 
-  /**
-   * Clean up resources when the form is no longer needed
-   */
-  public destroy(): void {
-    // Remove message listeners
-    if (this.unsubscribeListener) {
-      this.unsubscribeListener();
-    }
+//     // Submit the form with empty additional data
+//     this.submitWithData(environment, applicationId, {}, callback);
+//   }
 
-    // Clean up iframe manager
-    this.iframeManager.destroy();
-  }
-}
+//   /**
+//    * Clean up resources when the form is no longer needed
+//    */
+//   public destroy(): void {
+//     // Remove message listeners
+//     if (this.unsubscribeListener) {
+//       this.unsubscribeListener();
+//     }
+
+//     // Clean up iframe manager
+//     this.iframeManager.destroy();
+//   }
+// }

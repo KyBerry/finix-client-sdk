@@ -287,7 +287,7 @@ export interface FieldOptions {
   /** Validation functions to apply to this field */
   readonly validations?: string | readonly FieldValidator[];
   /** Whether to enable browser autocomplete */
-  readonly autoComplete?: boolean | string;
+  readonly autoComplete?: string;
   /** Error message to display if validation fails */
   readonly errorMessage?: string;
   /** Custom fonts to use for this field */

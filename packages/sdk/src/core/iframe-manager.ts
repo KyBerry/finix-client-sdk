@@ -1,4 +1,5 @@
 import { Environment, FieldOptions, FormId, IframeMessage, MessageType, PAYMENT_INSTRUMENTS, PaymentType } from "./types";
+import { cleanObject } from "../utils/object";
 
 /**
  * Manages secure iframe communication and creation
@@ -42,19 +43,19 @@ export class IframeManager {
    */
   public createFieldIframe(fieldType: string, options: FieldOptions): HTMLIFrameElement {
     // Filter out undefined values to keep the payload clean
-    const cleanOptions = this.cleanObject({
-      formId: this.formId,
-      type: fieldType,
-      paymentInstrumentType: PAYMENT_INSTRUMENTS[this.paymentType],
-      styles: options.styles,
-      placeholder: options.placeholder,
-      validations: options.validations,
+    const cleanOptions = cleanObject({
       autoComplete: options.autoComplete,
-      options: options.options,
       defaultOption: options.defaultOption,
+      defultValue: options.defaultValue,
       errorMessage: options.errorMessage,
       fonts: options.fonts,
-      defaultValue: options.defaultValue,
+      formId: this.formId,
+      options: options.options,
+      paymentInstrumentType: PAYMENT_INSTRUMENTS[this.paymentType],
+      placeholder: options.placeholder,
+      styles: options.styles,
+      type: fieldType,
+      validations: options.validations,
     });
 
     // Encode the options to make them URL-safe
@@ -76,7 +77,9 @@ export class IframeManager {
    * @param callback Function to call when a message is received
    * @returns A cleanup function to remove the listener
    */
-  public setupMessageListener(callback: (message: IframeMessage) => void): () => void {
+  public setupMessageListener(callback: (message: IframeMessage) => void) {
+    if (window === undefined) return;
+
     const handler = (event: MessageEvent): void => {
       // Validate the message origin
       if (!this.isValidOrigin(event.origin)) return;
@@ -186,20 +189,6 @@ export class IframeManager {
     const allowedDomains = ["https://js.finix.com"];
 
     return allowedDomains.some((domain) => origin.startsWith(domain));
-  }
-
-  /**
-   * Clean an object by removing undefined values
-   * @param obj The object to clean
-   * @returns A new object with undefined values removed
-   */
-  private cleanObject<T extends Record<string, unknown>>(obj: T): Partial<T> {
-    return Object.entries(obj).reduce((acc, [key, value]) => {
-      if (value !== undefined) {
-        acc[key as keyof T] = value as any;
-      }
-      return acc;
-    }, {} as Partial<T>);
   }
 
   /**

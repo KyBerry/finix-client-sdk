@@ -61,17 +61,11 @@ export const BANK_FORM_FIELDS = [
     id: "bank_code",
     label: "Routing number",
     placeholder: "Routing number",
-    autoComplete: "off",
-    grouping: "main",
-    required: true,
   },
   {
     id: "account_type",
     label: "Account type",
     placeholder: "Account type",
-    autoComplete: "off",
-    grouping: "main",
-    required: true,
   },
 ];
 

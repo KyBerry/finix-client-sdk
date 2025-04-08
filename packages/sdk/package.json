@@ -44,14 +44,17 @@
   "devDependencies": {
     "@kyberry/eslint-config": "workspace:*",
     "@kyberry/typescript-config": "workspace:*",
+    "@types/lodash.merge": "^4.6.9",
     "@types/node": "^22.13.9",
     "@types/react": "18.3.0",
     "@types/react-dom": "18.3.1",
+    "csstype": "^3.1.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "typescript": "^5.7.3"
   },
   "dependencies": {
+    "lodash.merge": "^4.6.2",
     "zod": "^3.23.8"
   }
 }
