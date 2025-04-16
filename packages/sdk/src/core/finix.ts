@@ -10,7 +10,7 @@ import { DEFAULT_PRESETS } from "@/presets";
 import { FINIX_ENVIRONMENT, INIT_STATUS } from "@/types";
 import { createBrandedId, deepMerge, generateTimestampedId } from "@/utils";
 
-import type { DefaultPresets, FinixConfigOptions, FinixTokenFormOptions, FormId } from "@/types";
+import type { DefaultPresets, FinixConfigOptions, FinixFormFieldName, FinixTokenFormOptions, FormId } from "@/types";
 
 /**
  * Main entry point for the Finix SDK
@@ -59,22 +59,30 @@ export class Finix {
     }
   }
 
-  private async readyStatus(): Promise<void> {
+  private async createForm(type: "card" | "bank" | "token", options: { preset?: DefaultPresets; customOptions: Partial<FinixTokenFormOptions> }) {
+    const { preset = "base", customOptions } = options;
+
+    // Ensure SDK is initialized
     if (this.initPromise) await this.initPromise;
 
     if (this.status !== INIT_STATUS.READY || !this.sessionId) {
       throw new Error("Finix SDK not initialized");
     }
-  }
-
-  private async createForm(type: "card" | "bank" | "token", options: { preset?: DefaultPresets; customOptions: Partial<FinixTokenFormOptions> }) {
-    const { preset = "base", customOptions } = options;
-
-    // Ensure SDK is initialized
-    await this.readyStatus();
 
     const formId = createBrandedId<FormId>(generateTimestampedId(`form-${type}-`));
     const formOptions = deepMerge(DEFAULT_PRESETS[preset], customOptions);
+  }
+
+  private async createFieldHolder(fieldName: FinixFormFieldName, formOptions: Partial<FinixTokenFormOptions>) {
+    const fieldHolderEl = document.createElement("div");
+    fieldHolderEl.classList.add("field-holder", fieldName);
+
+    if (formOptions.showLabels && formOptions.labels && formOptions.labels[fieldName]) {
+      const labelEl = document.createElement("label");
+      labelEl.innerText = formOptions.labels[fieldName];
+
+      fieldHolderEl.appendChild(labelEl);
+    }
   }
 
   // /**
