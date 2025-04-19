@@ -1,16 +1,18 @@
 import { FinixTokenResponse, FormId } from "@/types";
 import { createBrandedId, generateTimestampedId } from "@/utils";
 
-import type { EnvironmentConfig, FormField, FormType, FieldName, FieldState, FormState, IframeMessage, PaymentForm } from "@/interfaces/types";
+import type { EnvironmentConfig, FieldName, FieldState, FormConfig, FormState, FormType, IframeMessage } from "@/interfaces/types";
 
-export abstract class BasePaymentForm<T extends FormType> implements PaymentForm {
-  protected formId: string;
-  protected environment: EnvironmentConfig;
-  protected formState: FormState = {} as FormState;
+export abstract class BasePaymentForm<TFormType extends FormType = FormType> {
+  protected readonly formId: string;
+  protected readonly environment: EnvironmentConfig;
+  protected readonly config: FormConfig<TFormType>;
+
   private messageHandlers: Array<(event: MessageEvent) => void> = [];
 
-  constructor(environment: EnvironmentConfig) {
+  constructor(environment: EnvironmentConfig, config: FormConfig<TFormType>) {
     this.environment = environment;
+    this.config = config;
     this.formId = createBrandedId<FormId>(generateTimestampedId(`form-`));
   }
 
@@ -92,11 +94,6 @@ export abstract class BasePaymentForm<T extends FormType> implements PaymentForm
   abstract submit(): Promise<FinixTokenResponse>;
 
   /**
-   * Create a field configuration based on options
-   */
-  protected abstract createFieldConfig(fieldType: string, options: any): any;
-
-  /**
    * Update submit button state based on form validation
    */
   protected abstract updateSubmitButtonState(): void;
@@ -110,16 +107,6 @@ export abstract class BasePaymentForm<T extends FormType> implements PaymentForm
    * Initialize form state
    */
   protected abstract initializeFormState(): void;
-
-  /**
-   * Create the base field configurations for this form type
-   */
-  protected abstract createBaseFields(): Array<FormField<T, false>>;
-
-  /**
-   * Create address field configurations when address is enabled
-   */
-  protected abstract createAddressFields(): Array<FormField<T, true>>;
 
   protected abstract addFormHeader(form: HTMLElement): void;
   protected abstract renderFormFields(form: HTMLElement): void;

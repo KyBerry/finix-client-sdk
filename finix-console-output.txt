@@ -1,0 +1,431 @@
+🚀 Finix Payment Library Loaded
+
+- Version: 1.0.0
+- Environment: null.jsbin.com
+- Documentation: https://docs.finix.com/
+
+------
+
+💳 Initializing Card Form
+
+Element ID: form-element
+
+Options:
+
+```js
+{
+    "showAddress": false,
+    "showLabels": true,
+    "labels": {
+        "name": "Full Name"
+    },
+    "showPlaceholders": true,
+    "placeholders": {
+        "name": "Full Name"
+    },
+    "defaultValues": {},
+    "hideFields": [],
+    "requiredFields": [
+        "name",
+        "address_line1",
+        "address_city",
+        "address_region",
+        "address_state",
+        "address_country",
+        "address_postal_code"
+    ],
+    "hideErrorMessages": false,
+    "errorMessages": {
+        "name": "Please enter a valid name",
+        "address_city": "Please enter a valid city"
+    },
+    "styles": {
+        "default": {
+            "color": "#000",
+            "border": "1px solid #CCCDCF",
+            "borderRadius": "8px",
+            "padding": "8px 16px",
+            "fontFamily": "Noto Sans Thaana",
+            "fontSize": "16px",
+            "boxShadow": "0px 1px 1px rgba(0, 0, 0, 0.03), 0px 2px 4px rgba(0, 0, 0, 0.03)"
+        },
+        "success": {},
+        "error": {
+            "border": "1px solid rgba(255,0,0, 0.3)"
+        }
+    },
+    "fonts": [
+        {
+            "fontFamily": "Noto Sans Thaana",
+            "url": "https://fonts.cdnfonts.com/s/107457/NotoSansThaana[wght].woff",
+            "format": "woff"
+        }
+    ],
+    "submitLabel": "Create Token"
+}
+```
+
+Raw Options Object:
+
+```js
+{
+    "showAddress": false,
+    "showLabels": true,
+    "labels": {
+        "name": "Full Name"
+    },
+    "showPlaceholders": true,
+    "placeholders": {
+        "name": "Full Name"
+    },
+    "defaultValues": {},
+    "hideFields": [],
+    "requiredFields": [
+        "name",
+        "address_line1",
+        "address_city",
+        "address_region",
+        "address_state",
+        "address_country",
+        "address_postal_code"
+    ],
+    "hideErrorMessages": false,
+    "errorMessages": {
+        "name": "Please enter a valid name",
+        "address_city": "Please enter a valid city"
+    },
+    "styles": {
+        "default": {
+            "color": "#000",
+            "border": "1px solid #CCCDCF",
+            "borderRadius": "8px",
+            "padding": "8px 16px",
+            "fontFamily": "Noto Sans Thaana",
+            "fontSize": "16px",
+            "boxShadow": "0px 1px 1px rgba(0, 0, 0, 0.03), 0px 2px 4px rgba(0, 0, 0, 0.03)"
+        },
+        "success": {},
+        "error": {
+            "border": "1px solid rgba(255,0,0, 0.3)"
+        }
+    },
+    "fonts": [
+        {
+            "fontFamily": "Noto Sans Thaana",
+            "url": "https://fonts.cdnfonts.com/s/107457/NotoSansThaana[wght].woff",
+            "format": "woff"
+        }
+    ],
+    "submitLabel": "Create Token"
+}
+```
+
+✅ Validation passed
+
+Sanitized Element ID: form-element
+
+🏗️ Setting up DOM
+- Creating form container
+- Creating error container
+- Adding base styles
+
+Custom update handler provided:
+
+```js
+onUpdate: function (state, binInformation, formHasErrors) {
+  window.runnerWindow.proxyConsole.log('STATE: ', state);
+  window.runnerWindow.proxyConsole.log(binInformation);
+  window.runnerWindow.proxyConsole.log(formHasErrors);
+},
+```
+
+🔄 Creating form handler
+
+Form handler created for element: form-element
+
+Form Object Created:
+
+```js
+{
+    "id": "form-1745004108428-0.7697163457103127",
+    "type": "card",
+    "fields": 0
+}
+```
+
+🔧 Processing Form Configuration
+
+Raw Config:
+
+```js
+{}
+```
+
+Processed Config:
+
+```js
+{
+    "showAddress": false,
+    "showLabels": true,
+    "labels": {
+        "name": "Full Name"
+    },
+    "showPlaceholders": true,
+    "placeholders": {
+        "name": "Full Name"
+    },
+    "defaultValues": {},
+    "hideFields": [],
+    "requiredFields": [
+        "name",
+        "address_line1",
+        "address_city",
+        "address_region",
+        "address_state",
+        "address_country",
+        "address_postal_code"
+    ],
+    "hideErrorMessages": false,
+    "errorMessages": {
+        "name": "Please enter a valid name",
+        "address_city": "Please enter a valid city"
+    },
+    "styles": {
+        "default": {
+            "color": "#000",
+            "border": "1px solid #CCCDCF",
+            "borderRadius": "8px",
+            "padding": "8px 16px",
+            "fontFamily": "Noto Sans Thaana",
+            "fontSize": "16px",
+            "boxShadow": "0px 1px 1px rgba(0, 0, 0, 0.03), 0px 2px 4px rgba(0, 0, 0, 0.03)"
+        },
+        "success": {},
+        "error": {
+            "border": "1px solid rgba(255,0,0, 0.3)"
+        }
+    },
+    "fonts": [
+        {
+            "fontFamily": "Noto Sans Thaana",
+            "url": "https://fonts.cdnfonts.com/s/107457/NotoSansThaana[wght].woff",
+            "format": "woff"
+        }
+    ],
+    "submitLabel": "Create Token"
+}
+```
+
+Form Settings:
+
+```js
+{
+    "showLabels": true,
+    "showPlaceholders": true,
+    "showAddress": false,
+    "hideErrorMessages": false,
+    "defaultCountry": "USA",
+    "hideFields": [],
+    "requiredFields": [
+        "name",
+        "address_line1",
+        "address_city",
+        "address_region",
+        "address_state",
+        "address_country",
+        "address_postal_code"
+    ]
+}
+```
+
+Applied Styles:
+
+```js
+{
+    "default": {
+        "color": "#000",
+        "border": "1px solid #CCCDCF",
+        "borderRadius": "8px",
+        "padding": "8px 16px",
+        "fontFamily": "Noto Sans Thaana",
+        "fontSize": "16px",
+        "boxShadow": "0px 1px 1px rgba(0, 0, 0, 0.03), 0px 2px 4px rgba(0, 0, 0, 0.03)"
+    },
+    "success": {},
+    "error": {
+        "border": "1px solid rgba(255,0,0, 0.3)"
+    }
+}
+```
+
+🏗️ Creating Form Fields
+
+- Creating field: name
+- Field ID: name
+- Show Label: true
+- Label Text: Full Name
+- Validations: required
+- Placeholder: Full Name
+- Default Value: none
+- Auto Complete: cc-name
+- Error Message: Please enter a valid name
+- Hidden: false
+
+Complete Config:
+
+```js
+{
+    "form": {
+        "type": "card",
+        "id": "form-1745004108428-0.7697163457103127",
+        "fields": [],
+        "state": {},
+        "binInformation": {}
+    },
+    "elementId": "form-element",
+    "fieldType": "name",
+    "fieldHolderId": "name",
+    "showLabels": true,
+    "labelText": "Full Name",
+    "fieldOptions": {
+        "autoComplete": "cc-name",
+        "validations": "required",
+        "errorMessage": "Please enter a valid name",
+        "placeholder": {
+            "text": "Full Name",
+            "hideOnFocus": true
+        },
+        "defaultValue": "",
+        "styles": {
+            "default": {
+                "color": "#000",
+                "border": "1px solid #CCCDCF",
+                "borderRadius": "8px",
+                "padding": "8px 16px",
+                "fontFamily": "Noto Sans Thaana",
+                "fontSize": "16px",
+                "boxShadow": "0px 1px 1px rgba(0, 0, 0, 0.03), 0px 2px 4px rgba(0, 0, 0, 0.03)"
+            },
+            "success": {},
+            "error": {
+                "border": "1px solid rgba(255,0,0, 0.3)"
+            }
+        },
+        "fonts": [
+            {
+                "fontFamily": "Noto Sans Thaana",
+                "url": "https://fonts.cdnfonts.com/s/107457/NotoSansThaana[wght].woff",
+                "format": "woff"
+            }
+        ]
+    }
+}
+```
+
+🏗️ Creating Field: name
+
+Field Configuration:
+
+```js
+{
+    "Field Type": "name",
+    "Form ID": "form-1745004108428-0.7697163457103127",
+    "Payment Type": "PAYMENT_CARD",
+    "Validation": "required",
+    "Auto Complete": "cc-name",
+    "Default Option": "None",
+    "Has Placeholder": true,
+    "Has Custom Styles": true,
+    "Has Fonts": true,
+    "Has Default Value": false
+}
+```
+
+Full Configuration:
+```js
+{
+    "formId": "form-1745004108428-0.7697163457103127",
+    "type": "name",
+    "paymentInstrumentType": "PAYMENT_CARD",
+    "styles": {
+        "default": {
+            "color": "#000",
+            "border": "1px solid #CCCDCF",
+            "borderRadius": "8px",
+            "padding": "8px 16px",
+            "fontFamily": "Noto Sans Thaana",
+            "fontSize": "16px",
+            "boxShadow": "0px 1px 1px rgba(0, 0, 0, 0.03), 0px 2px 4px rgba(0, 0, 0, 0.03)"
+        },
+        "success": {},
+        "error": {
+            "border": "1px solid rgba(255,0,0, 0.3)"
+        }
+    },
+    "placeholder": {
+        "text": "Full Name",
+        "hideOnFocus": true
+    },
+    "validations": "required",
+    "autoComplete": "cc-name",
+    "errorMessage": "Please enter a valid name",
+    "fonts": [
+        {
+            "fontFamily": "Noto Sans Thaana",
+            "url": "https://fonts.cdnfonts.com/s/107457/NotoSansThaana[wght].woff",
+            "format": "woff"
+        }
+    ],
+    "defaultValue": ""
+}
+```
+
+Config Size: 932 characters
+IFrame URL: https://js.finix.com/v/1/payment-fields/index.html?eyJmb3JtSWQiOiJmb3JtLTE3NDUwMDQxMDg0MjgtMC43Njk3MTYzNDU3MTAzMTI3IiwidHlwZSI6Im5hbWUiLCJwYXltZW50SW5zdHJ1bWVudFR5cGUiOiJQQVlNRU5UX0NBUkQiLCJzdHlsZXMiOnsiZGVmYXVsdCI6eyJjb2xvciI6IiMwMDAiLCJib3JkZXIiOiIxcHggc29saWQgI0NDQ0RDRiIsImJvcmRlclJhZGl1cyI6IjhweCIsInBhZGRpbmciOiI4cHggMTZweCIsImZvbnRGYW1pbHkiOiJOb3RvIFNhbnMgVGhhYW5hIiwiZm9udFNpemUiOiIxNnB4IiwiYm94U2hhZG93IjoiMHB4IDFweCAxcHggcmdiYSgwLCAwLCAwLCAwLjAzKSwgMHB4IDJweCA0cHggcmdiYSgwLCAwLCAwLCAwLjAzKSJ9LCJzdWNjZXNzIjp7fSwiZXJyb3IiOnsiYm9yZGVyIjoiMXB4IHNvbGlkIHJnYmEoMjU1LDAsMCwgMC4zKSJ9fSwicGxhY2Vob2xkZXIiOnsidGV4dCI6IkZ1bGwgTmFtZSIsImhpZGVPbkZvY3VzIjp0cnVlfSwidmFsaWRhdGlvbnMiOiJyZXF1aXJlZCIsImF1dG9Db21wbGV0ZSI6ImNjLW5hbWUiLCJlcnJvck1lc3NhZ2UiOiJQbGVhc2UgZW50ZXIgYSB2YWxpZCBuYW1lIiwiZm9udHMiOlt7ImZvbnRGYW1pbHkiOiJOb3RvIFNhbnMgVGhhYW5hIiwidXJsIjoiaHR0cHM6Ly9mb250cy5jZG5mb250cy5jb20vcy8xMDc0NTcvTm90b1NhbnNUaGFhbmFbd2dodF0ud29mZiIsImZvcm1hdCI6IndvZmYifV0sImRlZmF1bHRWYWx1ZSI6IiJ9
+
+Initial Field State:
+
+```js
+{
+    "isFocused": false,
+    "isDirty": false,
+    "errorMessages": []
+}
+```
+
+Field name created successfully ✅
+
+---
+
+🔄 Form State Updated
+
+```js
+{
+    "name": {
+        "isDirty": false,
+        "isFocused": false,
+        "errors": ["Please enter a valid name"],
+    },
+    "number": {
+        "isDirty": false,
+        "isFocused": false,
+        "errors": ["Invalid card number"],
+    },
+    "expiration_date": {
+        "isDirty": false,
+        "isFocused": false,
+        "errors": ["Invalid expiration date"],
+    },
+    "security_code": {
+        "isDirty": false,
+        "isFocused": false,
+        "errors": [],
+    },
+    "address.country": {
+        "isDirty": false,
+        "isFocused": false,
+        "errors": [],
+        "country": "USA"
+    }
+}
+```

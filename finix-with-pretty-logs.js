@@ -2017,108 +2017,555 @@ window.Finix = {
     console.group("💳 Initializing Card Form");
     console.log("%c Element ID:", "font-weight: bold; color: #0275D8", e);
     console.log("%c Options:", "font-weight: bold; color: #0275D8", t);
+    console.log("%c Raw Options Object:", "font-weight: bold; color: #0275D8", JSON.parse(JSON.stringify(t)));
 
-    if (e)
-      if ("[object Object]" === Object.prototype.toString.call(t)) {
-        if (document.getElementById(e)) {
-          var n = e.replace(/[^a-zA-Z0-9-_:.]/g, "");
-          Vt(n), Kt(n), Jt(n);
-          var r = t.onUpdate,
-            o = new h(
-              "card",
-              (function (e, t) {
-                var n = function (e) {
-                  return document.querySelector("#".concat(t, " .").concat(e));
-                };
-                return function (t, r) {
-                  console.group("🔄 Form State Updated");
+    if (!e) {
+      console.error("%c ❌ Error: No elementId provided", "color: #D9534F; font-weight: bold");
+      console.groupEnd();
+      console.error("Finix.CardTokenForm() - No elementId was provided");
+      return;
+    }
 
-                  if (r) {
-                    console.log("%c Card Brand:", "font-weight: bold; color: #7E57C2", r.cardBrand);
-                  }
+    if ("[object Object]" !== Object.prototype.toString.call(t)) {
+      console.error("%c ❌ Error: Options must be an object", "color: #D9534F; font-weight: bold");
+      console.groupEnd();
+      console.error("Finix.CardTokenForm() - options must be an object");
+      return;
+    }
 
-                  r && r.cardBrand, t && (kt(t.name, n("name_validation")), kt(t.number, n("number_validation")), kt(t.expiration_date, n("expiration_date_validation")), kt(t.security_code, n("security_code_validation")), kt(t["address.line1"], n("address_line1_validation")), kt(t["address.line2"], n("address_line2_validation")), kt(t["address.city"], n("address_city_validation")), kt(t["address.postal_code"], n("address_postal_code_validation")));
-                  var o = [],
-                    i = Qt(t, ["address.country", "selected"], "USA"),
-                    s = n("address_region"),
-                    a = n("address_state");
-                  "USA" === i && null === a && o.push("address.region"), "USA" !== i && null === s && o.push("address.region");
-                  var c = Zt(Xt(t, o), function (e) {
-                      var t = e.errorMessages;
-                      return (void 0 === t ? [] : t).length > 0;
-                    }),
-                    d = n("finix-submit-button");
-                  d && (d.disabled = c), t && ("USA" !== i ? (Gt(s, "display", "block"), Gt(a, "display", "none"), kt(t["address.region"], n("address_region_validation"))) : (Gt(s, "display", "none"), Gt(a, "display", "block"), kt(t["address.region"], n("address_state_validation")))), "function" == typeof e && e(t, r, c);
-                };
-              })(r, n),
+    if (!document.getElementById(e)) {
+      console.error("%c ❌ Error: Element not found", "color: #D9534F; font-weight: bold", e);
+      console.groupEnd();
+      console.error("Finix.CardTokenForm() - Could not find element with id: " + e);
+      return;
+    }
+
+    console.log("%c ✅ Validation passed", "color: #5CB85C; font-weight: bold");
+
+    // Processing element ID
+    var n = e.replace(/[^a-zA-Z0-9-_:.]/g, "");
+    console.log("%c Sanitized Element ID:", "color: #5BC0DE", n);
+
+    console.group("🏗️ Setting up DOM");
+    console.log("%c Creating form container", "color: #5BC0DE");
+    Vt(n);
+    console.log("%c Creating error container", "color: #5BC0DE");
+    Kt(n);
+    console.log("%c Adding base styles", "color: #5BC0DE");
+    Jt(n);
+    console.groupEnd();
+
+    var r = t.onUpdate;
+    if (r) {
+      console.log("%c Custom update handler provided:", "color: #5BC0DE", r);
+    }
+
+    console.group("🔄 Creating form handler");
+    var o = new h(
+      "card",
+      (function (e, t) {
+        console.log("%c Form handler created for element:", "color: #0275D8", t);
+
+        var n = function (e) {
+          return document.querySelector("#".concat(t, " .").concat(e));
+        };
+
+        return function (t, r) {
+          console.group("🔄 Form State Updated");
+
+          if (r) {
+            console.log("%c Card Brand:", "font-weight: bold; color: #7E57C2", r.cardBrand);
+            console.log("%c BIN Information:", "font-weight: bold; color: #7E57C2", r);
+          }
+
+          if (t) {
+            console.group("📋 Field States");
+            console.table(
+              Object.keys(t).reduce((acc, key) => {
+                if (t[key] && typeof t[key] === "object") {
+                  acc[key] = {
+                    isDirty: !!t[key].isDirty,
+                    isFocused: !!t[key].isFocused,
+                    errorCount: (t[key].errorMessages || []).length,
+                    errors: (t[key].errorMessages || []).join(", "),
+                    value: t[key].value || t[key].selected || "(masked)",
+                  };
+                }
+                return acc;
+              }, {}),
             );
 
-          console.log("%c Form Successfully Initialized", "font-weight: bold; color: #5CB85C; font-size: 14px");
-          console.groupEnd();
-          return (
-            (function (e, t) {
-              var n = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : {},
-                r = n.placeholders,
-                o = void 0 === r ? {} : r,
-                i = n.showPlaceholders,
-                s = void 0 === i || i,
-                a = n.labels,
-                d = void 0 === a ? {} : a,
-                l = n.showLabels,
-                u = void 0 === l || l,
-                f = n.showAddress,
-                p = void 0 !== f && f,
-                h = n.hideFields,
-                m = void 0 === h ? [] : h,
-                y = n.requiredFields,
-                b = void 0 === y ? [] : y,
-                g = n.styles,
-                v = void 0 === g ? {} : g,
-                w = n.onLoad,
-                O = n.hideErrorMessages,
-                _ = void 0 !== O && O,
-                x = n.errorMessages,
-                E = void 0 === x ? {} : x,
-                T = n.fonts,
-                S = n.defaultValues,
-                C = void 0 === S ? {} : S,
-                A = Mt(Qt(n, "defaultCountry") || Qt(n, "defaultValues.address_country") || "USA"),
-                R = { default: Qt(v, "default", { color: "#000", border: "1px solid #CCCDCF", borderRadius: "8px", padding: "8px 16px", fontFamily: "Helvetica", fontSize: "16px", boxShadow: "0px 1px 1px rgba(0, 0, 0, 0.03), 0px 2px 4px rgba(0, 0, 0, 0.03)" }), success: Qt(v, "success", {}), error: Qt(v, "error", { color: "#d9534f" }) },
-                L = c({ styles: R, fonts: T });
-              m.includes("name") || $t({ form: e, elementId: t, fieldType: "name", fieldHolderId: "name", showLabels: u, labelText: d.card_holder_name || d.name || "Name", fieldOptions: nn({ autoComplete: "cc-name", validations: "required", errorMessage: _ ? "" : E.card_holder_name || E.name || "Name is required", placeholder: s ? { text: o.card_holder_name || o.name || "Name", hideOnFocus: !0 } : void 0, defaultValue: Mt(C.card_holder_name || C.name) }, L) });
-              var j = $t({ form: e, elementId: t, fieldType: "number", fieldHolderId: "number", showLabels: u, labelText: d.number || "Card Number", fieldOptions: nn({ validations: "cardNumber", errorMessage: _ ? "" : E.number, autoComplete: "cc-number", placeholder: s ? { text: o.number || "4111 1111 1111 1111", hideOnFocus: !0 } : void 0 }, L) });
-              m.includes("security_code")
-                ? $t({ form: e, elementId: t, fieldType: "expiration_date", fieldHolderId: "expiration_date", showLabels: u, labelText: d.expiration_date || "Expiration", fieldOptions: nn({ validations: "cardExpiry", errorMessage: _ ? "" : E.expiration_date, autoComplete: "cc-exp", placeholder: s ? { text: o.expiration_date || "MM/YYYY", hideOnFocus: !0 } : void 0 }, L) })
-                : Yt(e, t, [
-                    { fieldType: "expiration_date", fieldHolderId: "expiration_date", showLabels: u, labelText: d.expiration_date || "Expiration", fieldOptions: nn({ validations: "cardExpiry", errorMessage: _ ? "" : E.expiration_date, autoComplete: "cc-exp", placeholder: s ? { text: o.expiration_date || "MM/YYYY", hideOnFocus: !0 } : void 0 }, L) },
-                    { fieldType: "security_code", fieldHolderId: "security_code", showLabels: u, labelText: d.security_code || "CVC", fieldOptions: nn({ validations: "cardCVC", errorMessage: _ ? "" : E.security_code, autoComplete: "cc-csc", placeholder: s ? { text: o.security_code || "CVC", hideOnFocus: !0 } : void 0 }, L) },
-                  ]),
-                p &&
-                  (m.includes("address_line1") || $t({ form: e, elementId: t, fieldType: "address.line1", fieldHolderId: "address_line1", showLabels: u, labelText: d.address_line1 || "Address Line 1", fieldOptions: nn({ validations: b.includes("address_line1") ? "required" : void 0, errorMessage: _ ? "" : E.address_line1 || "Address is required", autoComplete: "address-line1", placeholder: s ? { text: o.address_line1 || "Address Line 1", hideOnFocus: !0 } : void 0, defaultValue: Mt(C.address_line1) }, L) }),
-                  m.includes("address_line2") || $t({ form: e, elementId: t, fieldType: "address.line2", fieldHolderId: "address_line2", showLabels: u, labelText: d.address_line2 || "Address Line 2", fieldOptions: nn({ validations: b.includes("address_line2") ? "required" : void 0, errorMessage: _ ? "" : E.address_line2 || "Address Line 2 is required", autoComplete: "address-line2", placeholder: s ? { text: o.address_line2 || "Address Line 2", hideOnFocus: !0 } : void 0, defaultValue: Mt(C.address_line2) }, L) }),
-                  Yt(e, t, [
-                    { fieldType: "address.city", fieldHolderId: "address_city", showLabels: u, labelText: d.address_city || "City", fieldOptions: nn({ validations: b.includes("address_city") ? "required" : void 0, errorMessage: _ ? "" : E.address_city || "City is required", autoComplete: "address-level2", placeholder: s ? { text: o.address_city || "City", hideOnFocus: !0 } : void 0, defaultValue: Mt(C.address_city) }, L), hidden: m.includes("address_city") },
-                    { fieldType: "address.region", fieldHolderId: "address_region", showLabels: u, labelText: d.address_region || "Region", fieldOptions: nn({ validations: b.includes("address_region") ? "required" : void 0, errorMessage: _ ? "" : E.address_region || "Region is required", autoComplete: "address-level1", placeholder: s ? { text: o.address_region || "State", hideOnFocus: !0 } : void 0, defaultValue: Mt(C.address_region) }, L), hidden: m.includes("address_region") },
-                    { fieldType: "address.region", fieldHolderId: "address_state", showLabels: u, labelText: d.address_state || "State", fieldOptions: nn({ validations: b.includes("address_state") ? "required" : void 0, autoComplete: "address-level1", placeholder: s ? { text: o.address_state || "State", hideOnFocus: !0 } : void 0, options: "state", defaultOption: Mt(C.address_state) }, L), hidden: m.includes("address_state") },
-                  ])),
-                Yt(
-                  e,
-                  t,
-                  p
-                    ? [
-                        { fieldType: "address.postal_code", fieldHolderId: "address_postal_code", showLabels: u, labelText: d.address_postal_code || "ZIP", fieldOptions: nn({ validations: b.includes("address_postal_code") ? "required" : void 0, errorMessage: _ ? "" : E.address_postal_code || "ZIP is required", autoComplete: "postal-code", placeholder: s ? { text: o.address_postal_code || "ZIP", hideOnFocus: !0 } : void 0, defaultValue: Mt(C.address_postal_code) }, L), hidden: m.includes("address_postal_code") },
-                        { fieldType: "address.country", fieldHolderId: "address_country", showLabels: u, labelText: d.address_country || "Country", fieldOptions: nn({ autoComplete: "country", placeholder: s ? { text: o.address_country || "Country", hideOnFocus: !0 } : void 0, options: "country", defaultOption: A }, L), hidden: m.includes("address_country") },
-                      ]
-                    : [{ fieldType: "address.country", fieldHolderId: "address_country", showLabels: u, labelText: d.address_country || "Country", fieldOptions: nn({ autoComplete: "country", placeholder: s ? { text: o.address_country || "Country", hideOnFocus: !0 } : void 0, defaultOption: A, options: "country" }, L), hidden: !0 }],
-                ),
-                "function" == typeof w && j.addEventListener("load", w);
-            })(o, n, zt(n, t)),
-            o
-          );
-        }
-        console.error("Finix.CardTokenForm() - Could not find element with id: " + e);
-      } else console.error("Finix.CardTokenForm() - options must be an object");
-    else console.error("Finix.CardTokenForm() - No elementId was provided");
+            // Apply validation UI
+            if (t.name) kt(t.name, n("name_validation"));
+            if (t.number) kt(t.number, n("number_validation"));
+            if (t.expiration_date) kt(t.expiration_date, n("expiration_date_validation"));
+            if (t.security_code) kt(t.security_code, n("security_code_validation"));
+            if (t["address.line1"]) kt(t["address.line1"], n("address_line1_validation"));
+            if (t["address.line2"]) kt(t["address.line2"], n("address_line2_validation"));
+            if (t["address.city"]) kt(t["address.city"], n("address_city_validation"));
+            if (t["address.postal_code"]) kt(t["address.postal_code"], n("address_postal_code_validation"));
+
+            console.groupEnd(); // Field States
+          }
+
+          // Country specific handling
+          var o = [],
+            i = Qt(t, ["address.country", "selected"], "USA"),
+            s = n("address_region"),
+            a = n("address_state");
+
+          console.log("%c Selected Country:", "color: #0275D8", i);
+
+          // Region/state validation logic
+          if ("USA" === i && null === a) {
+            o.push("address.region");
+            console.log("%c Missing USA state field", "color: #F0AD4E");
+          }
+          if ("USA" !== i && null === s) {
+            o.push("address.region");
+            console.log("%c Missing international region field", "color: #F0AD4E");
+          }
+
+          // Check for errors in all fields
+          var c = Zt(Xt(t, o), function (e) {
+            var t = e.errorMessages;
+            return (void 0 === t ? [] : t).length > 0;
+          });
+
+          console.log("%c Form Valid:", "font-weight: bold; color: " + (c ? "#D9534F" : "#5CB85C"), !c);
+
+          // Handle submit button state
+          var d = n("finix-submit-button");
+          if (d) {
+            d.disabled = c;
+            console.log("%c Submit Button:", "color: #5BC0DE", c ? "Disabled ❌" : "Enabled ✅");
+          }
+
+          // Country-specific field display
+          if (t) {
+            if ("USA" !== i) {
+              console.log("%c Showing international region field", "color: #5BC0DE");
+              Gt(s, "display", "block");
+              Gt(a, "display", "none");
+              kt(t["address.region"], n("address_region_validation"));
+            } else {
+              console.log("%c Showing US state field", "color: #5BC0DE");
+              Gt(s, "display", "none");
+              Gt(a, "display", "block");
+              kt(t["address.region"], n("address_state_validation"));
+            }
+          }
+
+          // Call user's update handler if provided
+          if ("function" == typeof e) {
+            console.log("%c Calling user update handler", "color: #5BC0DE");
+            e(t, r, c);
+          }
+
+          console.groupEnd(); // Form State Updated
+        };
+      })(r, n),
+    );
+    console.groupEnd(); // Creating form handler
+
+    console.log("%c Form Object Created:", "font-weight: bold; color: #5CB85C", {
+      id: o.id,
+      type: o.type,
+      fields: o.fields.length,
+    });
+
+    // Process options for field creation
+    console.group("🔧 Processing Form Configuration");
+
+    var formConfig = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : {};
+    var processedConfig = zt(n, t);
+
+    console.log("%c Raw Config:", "color: #5BC0DE", JSON.parse(JSON.stringify(formConfig)));
+    console.log("%c Processed Config:", "color: #5BC0DE", JSON.parse(JSON.stringify(processedConfig)));
+
+    var r = processedConfig.placeholders || {},
+      i = processedConfig.showPlaceholders !== false,
+      a = processedConfig.labels || {},
+      l = processedConfig.showLabels !== false,
+      p = processedConfig.showAddress === true,
+      m = processedConfig.hideFields || [],
+      b = processedConfig.requiredFields || [],
+      v = processedConfig.styles || {},
+      _ = processedConfig.hideErrorMessages === true,
+      E = processedConfig.errorMessages || {},
+      T = processedConfig.fonts,
+      C = processedConfig.defaultValues || {},
+      A = Mt(Qt(processedConfig, "defaultCountry") || Qt(processedConfig, "defaultValues.address_country") || "USA");
+
+    console.log("%c Form Settings:", "color: #5BC0DE", {
+      showLabels: l,
+      showPlaceholders: i,
+      showAddress: p,
+      hideErrorMessages: _,
+      defaultCountry: A,
+      hideFields: m,
+      requiredFields: b,
+    });
+
+    // Setup styles
+    var R = {
+      default: Qt(v, "default", {
+        color: "#000",
+        border: "1px solid #CCCDCF",
+        borderRadius: "8px",
+        padding: "8px 16px",
+        fontFamily: "Helvetica",
+        fontSize: "16px",
+        boxShadow: "0px 1px 1px rgba(0, 0, 0, 0.03), 0px 2px 4px rgba(0, 0, 0, 0.03)",
+      }),
+      success: Qt(v, "success", {}),
+      error: Qt(v, "error", { color: "#d9534f" }),
+    };
+
+    console.log("%c Applied Styles:", "color: #5BC0DE", R);
+    console.groupEnd(); // Processing Form Configuration
+
+    var L = c({ styles: R, fonts: T });
+
+    // Field Creation
+    console.group("🏗️ Creating Form Fields");
+
+    // Helper to log field options before creation
+    function logFieldCreation(fieldType, fieldId, options) {
+      console.group(`%c Creating field: ${fieldType}`, "color: #0275D8; font-weight: bold");
+      console.log("%c Field ID:", "color: #5BC0DE", fieldId);
+      console.log("%c Show Label:", "color: #5BC0DE", l);
+      console.log("%c Label Text:", "color: #5BC0DE", options.labelText || fieldId);
+      console.log("%c Validations:", "color: #5BC0DE", options.fieldOptions.validations || "none");
+      console.log("%c Placeholder:", "color: #5BC0DE", options.fieldOptions.placeholder?.text || "none");
+      console.log("%c Default Value:", "color: #5BC0DE", options.fieldOptions.defaultValue || options.fieldOptions.defaultOption || "none");
+      console.log("%c Auto Complete:", "color: #5BC0DE", options.fieldOptions.autoComplete || "none");
+      console.log("%c Error Message:", "color: #5BC0DE", options.fieldOptions.errorMessage || "none");
+      console.log("%c Hidden:", "color: #5BC0DE", options.hidden || false);
+      console.log("%c Complete Config:", "color: #5BC0DE", JSON.parse(JSON.stringify(options)));
+      console.groupEnd();
+    }
+
+    // Create name field if not hidden
+    if (!m.includes("name")) {
+      const nameOptions = {
+        form: o,
+        elementId: n,
+        fieldType: "name",
+        fieldHolderId: "name",
+        showLabels: l,
+        labelText: a.card_holder_name || a.name || "Name",
+        fieldOptions: nn(
+          {
+            autoComplete: "cc-name",
+            validations: "required",
+            errorMessage: _ ? "" : E.card_holder_name || E.name || "Name is required",
+            placeholder: i ? { text: r.card_holder_name || r.name || "Name", hideOnFocus: !0 } : void 0,
+            defaultValue: Mt(C.card_holder_name || C.name),
+          },
+          L,
+        ),
+      };
+
+      logFieldCreation("name", "name", nameOptions);
+      $t(nameOptions);
+    } else {
+      console.log("%c Skipping name field (hidden)", "color: #F0AD4E");
+    }
+
+    // Create card number field
+    const numberOptions = {
+      form: o,
+      elementId: n,
+      fieldType: "number",
+      fieldHolderId: "number",
+      showLabels: l,
+      labelText: a.number || "Card Number",
+      fieldOptions: nn(
+        {
+          validations: "cardNumber",
+          errorMessage: _ ? "" : E.number,
+          autoComplete: "cc-number",
+          placeholder: i ? { text: r.number || "4111 1111 1111 1111", hideOnFocus: !0 } : void 0,
+        },
+        L,
+      ),
+    };
+
+    logFieldCreation("number", "number", numberOptions);
+    var j = $t(numberOptions);
+
+    // Create expiration date and security code fields
+    if (m.includes("security_code")) {
+      const expirationOptions = {
+        form: o,
+        elementId: n,
+        fieldType: "expiration_date",
+        fieldHolderId: "expiration_date",
+        showLabels: l,
+        labelText: a.expiration_date || "Expiration",
+        fieldOptions: nn(
+          {
+            validations: "cardExpiry",
+            errorMessage: _ ? "" : E.expiration_date,
+            autoComplete: "cc-exp",
+            placeholder: i ? { text: r.expiration_date || "MM/YYYY", hideOnFocus: !0 } : void 0,
+          },
+          L,
+        ),
+      };
+
+      logFieldCreation("expiration_date", "expiration_date", expirationOptions);
+      $t(expirationOptions);
+    } else {
+      console.group("%c Creating date and security code fields", "color: #0275D8; font-weight: bold");
+
+      const expirationOptions = {
+        fieldType: "expiration_date",
+        fieldHolderId: "expiration_date",
+        showLabels: l,
+        labelText: a.expiration_date || "Expiration",
+        fieldOptions: nn(
+          {
+            validations: "cardExpiry",
+            errorMessage: _ ? "" : E.expiration_date,
+            autoComplete: "cc-exp",
+            placeholder: i ? { text: r.expiration_date || "MM/YYYY", hideOnFocus: !0 } : void 0,
+          },
+          L,
+        ),
+      };
+
+      const cvcOptions = {
+        fieldType: "security_code",
+        fieldHolderId: "security_code",
+        showLabels: l,
+        labelText: a.security_code || "CVC",
+        fieldOptions: nn(
+          {
+            validations: "cardCVC",
+            errorMessage: _ ? "" : E.security_code,
+            autoComplete: "cc-csc",
+            placeholder: i ? { text: r.security_code || "CVC", hideOnFocus: !0 } : void 0,
+          },
+          L,
+        ),
+      };
+
+      console.log("%c Expiration Date Config:", "color: #5BC0DE", JSON.parse(JSON.stringify(expirationOptions)));
+      console.log("%c Security Code Config:", "color: #5BC0DE", JSON.parse(JSON.stringify(cvcOptions)));
+      console.groupEnd();
+
+      Yt(o, n, [expirationOptions, cvcOptions]);
+    }
+
+    // Create address fields if needed
+    if (p) {
+      console.group("🏠 Creating address fields");
+
+      // Address line 1
+      if (!m.includes("address_line1")) {
+        const addressLine1Options = {
+          form: o,
+          elementId: n,
+          fieldType: "address.line1",
+          fieldHolderId: "address_line1",
+          showLabels: l,
+          labelText: a.address_line1 || "Address Line 1",
+          fieldOptions: nn(
+            {
+              validations: b.includes("address_line1") ? "required" : void 0,
+              errorMessage: _ ? "" : E.address_line1 || "Address is required",
+              autoComplete: "address-line1",
+              placeholder: i ? { text: r.address_line1 || "Address Line 1", hideOnFocus: !0 } : void 0,
+              defaultValue: Mt(C.address_line1),
+            },
+            L,
+          ),
+        };
+
+        logFieldCreation("address.line1", "address_line1", addressLine1Options);
+        $t(addressLine1Options);
+      } else {
+        console.log("%c Skipping address line 1 (hidden)", "color: #F0AD4E");
+      }
+
+      // Address line 2
+      if (!m.includes("address_line2")) {
+        const addressLine2Options = {
+          form: o,
+          elementId: n,
+          fieldType: "address.line2",
+          fieldHolderId: "address_line2",
+          showLabels: l,
+          labelText: a.address_line2 || "Address Line 2",
+          fieldOptions: nn(
+            {
+              validations: b.includes("address_line2") ? "required" : void 0,
+              errorMessage: _ ? "" : E.address_line2 || "Address Line 2 is required",
+              autoComplete: "address-line2",
+              placeholder: i ? { text: r.address_line2 || "Address Line 2", hideOnFocus: !0 } : void 0,
+              defaultValue: Mt(C.address_line2),
+            },
+            L,
+          ),
+        };
+
+        logFieldCreation("address.line2", "address_line2", addressLine2Options);
+        $t(addressLine2Options);
+      } else {
+        console.log("%c Skipping address line 2 (hidden)", "color: #F0AD4E");
+      }
+
+      // City, region, state fields
+      console.group("%c Creating city, region, state fields", "color: #0275D8; font-weight: bold");
+
+      const cityOptions = {
+        fieldType: "address.city",
+        fieldHolderId: "address_city",
+        showLabels: l,
+        labelText: a.address_city || "City",
+        fieldOptions: nn(
+          {
+            validations: b.includes("address_city") ? "required" : void 0,
+            errorMessage: _ ? "" : E.address_city || "City is required",
+            autoComplete: "address-level2",
+            placeholder: i ? { text: r.address_city || "City", hideOnFocus: !0 } : void 0,
+            defaultValue: Mt(C.address_city),
+          },
+          L,
+        ),
+        hidden: m.includes("address_city"),
+      };
+
+      const regionOptions = {
+        fieldType: "address.region",
+        fieldHolderId: "address_region",
+        showLabels: l,
+        labelText: a.address_region || "Region",
+        fieldOptions: nn(
+          {
+            validations: b.includes("address_region") ? "required" : void 0,
+            errorMessage: _ ? "" : E.address_region || "Region is required",
+            autoComplete: "address-level1",
+            placeholder: i ? { text: r.address_region || "State", hideOnFocus: !0 } : void 0,
+            defaultValue: Mt(C.address_region),
+          },
+          L,
+        ),
+        hidden: m.includes("address_region"),
+      };
+
+      const stateOptions = {
+        fieldType: "address.region",
+        fieldHolderId: "address_state",
+        showLabels: l,
+        labelText: a.address_state || "State",
+        fieldOptions: nn(
+          {
+            validations: b.includes("address_state") ? "required" : void 0,
+            autoComplete: "address-level1",
+            placeholder: i ? { text: r.address_state || "State", hideOnFocus: !0 } : void 0,
+            options: "state",
+            defaultOption: Mt(C.address_state),
+          },
+          L,
+        ),
+        hidden: m.includes("address_state"),
+      };
+
+      console.log("%c City Config:", "color: #5BC0DE", JSON.parse(JSON.stringify(cityOptions)));
+      console.log("%c Region Config:", "color: #5BC0DE", JSON.parse(JSON.stringify(regionOptions)));
+      console.log("%c State Config:", "color: #5BC0DE", JSON.parse(JSON.stringify(stateOptions)));
+      console.groupEnd();
+
+      Yt(o, n, [cityOptions, regionOptions, stateOptions]);
+
+      console.groupEnd(); // Creating address fields
+    }
+
+    // Create postal code and country fields
+    console.group("%c Creating postal/country fields", "color: #0275D8; font-weight: bold");
+
+    if (p) {
+      const postalOptions = {
+        fieldType: "address.postal_code",
+        fieldHolderId: "address_postal_code",
+        showLabels: l,
+        labelText: a.address_postal_code || "ZIP",
+        fieldOptions: nn(
+          {
+            validations: b.includes("address_postal_code") ? "required" : void 0,
+            errorMessage: _ ? "" : E.address_postal_code || "ZIP is required",
+            autoComplete: "postal-code",
+            placeholder: i ? { text: r.address_postal_code || "ZIP", hideOnFocus: !0 } : void 0,
+            defaultValue: Mt(C.address_postal_code),
+          },
+          L,
+        ),
+        hidden: m.includes("address_postal_code"),
+      };
+
+      const countryOptions = {
+        fieldType: "address.country",
+        fieldHolderId: "address_country",
+        showLabels: l,
+        labelText: a.address_country || "Country",
+        fieldOptions: nn(
+          {
+            autoComplete: "country",
+            placeholder: i ? { text: r.address_country || "Country", hideOnFocus: !0 } : void 0,
+            options: "country",
+            defaultOption: A,
+          },
+          L,
+        ),
+        hidden: m.includes("address_country"),
+      };
+
+      console.log("%c Postal Code Config:", "color: #5BC0DE", JSON.parse(JSON.stringify(postalOptions)));
+      console.log("%c Country Config:", "color: #5BC0DE", JSON.parse(JSON.stringify(countryOptions)));
+
+      Yt(o, n, [postalOptions, countryOptions]);
+    } else {
+      const hiddenCountryOptions = {
+        fieldType: "address.country",
+        fieldHolderId: "address_country",
+        showLabels: l,
+        labelText: a.address_country || "Country",
+        fieldOptions: nn(
+          {
+            autoComplete: "country",
+            placeholder: i ? { text: r.address_country || "Country", hideOnFocus: !0 } : void 0,
+            defaultOption: A,
+            options: "country",
+          },
+          L,
+        ),
+        hidden: !0,
+      };
+
+      console.log("%c Hidden Country Field Config:", "color: #5BC0DE", JSON.parse(JSON.stringify(hiddenCountryOptions)));
+      Yt(o, n, [hiddenCountryOptions]);
+    }
+
+    console.groupEnd(); // Creating postal/country fields
+
+    // Setup load handler if provided
+    if (processedConfig.onLoad && typeof processedConfig.onLoad === "function") {
+      console.log("%c Setting up load handler", "color: #5BC0DE", processedConfig.onLoad);
+      j.addEventListener("load", function () {
+        console.log("%c Form loaded, calling onLoad callback", "color: #5CB85C; font-weight: bold");
+        processedConfig.onLoad();
+      });
+    }
+
+    console.groupEnd(); // Creating Form Fields
+
+    console.log("%c 🎉 Form Successfully Initialized", "font-weight: bold; color: #5CB85C; font-size: 14px");
+    console.groupEnd(); // Initializing Card Form
+
+    return o;
   },
   BankTokenForm: function (e) {
     var t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {};
@@ -2261,3 +2708,122 @@ window.Finix = {
     return console.error("Finix.bankAccount() has been deprecated. Please use Finix.BankTokenForm() instead."), this.BankTokenForm(e, t);
   },
 };
+
+// custom form options https://finix.com/docs/guides/payments/online-payments/payment-details/payment-forms/
+const options = {
+  // show address fields in the form (default is false)
+  showAddress: false,
+  //show labels in the form (default is true)
+  showLabels: true,
+  // set custom labels for each field
+  labels: {
+    // Supported Fields: "name", "number", "expiration_date", "security_code", "account_number", "bank_code", "account_type", "address_line1", "address_line2", "address_city", "address_state","address_region", "address_country", "address_postal_code"
+    name: "Full Name",
+  },
+  // turn on or off placeholder text in the fields (default is true)
+  showPlaceholders: true,
+  // set custom placeholders for each field, you can specify them here
+  placeholders: {
+    // Supported Fields: "name", "number", "expiration_date", "security_code", "account_number", "bank_code", "account_type", "address_line1", "address_line2", "address_city", "address_state","address_region", "address_country", "address_postal_code"
+    name: "Full Name",
+  },
+  defaultValues: {
+    // Supported Fields:  "name", "security_code", "bank_code", "account_type", "address_line1", "address_line2", "address_city", "address_state","address_region", "address_country", "address_postal_code"
+    // name: "John Doe",
+  },
+  // hide specific fields that you do not need
+  hideFields: [
+    // Supported Fields: "name", "security_code", "address_line1", "address_line2", "address_city", "address_state","address_region", "address_country", "address_postal_code", "address_country"
+    // "name",
+    // "address_line1",
+    // "address_line2",
+    // "address_city",
+    //"address_state",
+    // "address_region",
+    // "address_country",
+  ],
+  // require any specific fields that are not required by default, you can specify them here
+  requiredFields: [
+    // Supported Fields: "name", "address_line1", "address_line2", "address_city", "address_state","address_region", "address_country", "address_postal_code"
+    "name",
+    "address_line1",
+    "address_city",
+    "address_region",
+    "address_state",
+    "address_country",
+    "address_postal_code",
+  ],
+  // if you want to require a field, but not hide input error messages (default is false)
+  hideErrorMessages: false,
+  // set custom error messages for each field if you are showing error messages
+  errorMessages: {
+    // Supported Fields: "name", "number", "expiration_date", "security_code", "account_number", "bank_code", "account_type", "address_line1", "address_line2", "address_city", "address_state","address_region", "address_country", "address_postal_code"
+    name: "Please enter a valid name",
+    address_city: "Please enter a valid city",
+  },
+  // custom styles for the form inputs (optional but recommended)
+  styles: {
+    // default styling for all fields
+    default: {
+      color: "#000",
+      border: "1px solid #CCCDCF",
+      borderRadius: "8px",
+      padding: "8px 16px",
+      fontFamily: "Noto Sans Thaana",
+      fontSize: "16px",
+      boxShadow: "0px 1px 1px rgba(0, 0, 0, 0.03), 0px 2px 4px rgba(0, 0, 0, 0.03)",
+    },
+    // specific styling if the field is valid
+    success: {
+      // color: "#5cb85c",
+    },
+    // specific styling if the field has errors
+    error: {
+      // color: "#d9534f",
+      border: "1px solid rgba(255,0,0, 0.3)",
+    },
+  },
+
+  // Define custom fonts for input text. This requires a hosted font file from a CDN and must use HTTPS.
+  // To use custom fonts set the fontFamily in the style options above.
+  fonts: [
+    // Here you can define multiple fonts to use in the input fields.
+    {
+      fontFamily: "Noto Sans Thaana",
+      url: "https://fonts.cdnfonts.com/s/107457/NotoSansThaana[wght].woff",
+      format: "woff",
+    },
+  ],
+  // optional callback function that will trigger when form state changes (can be called frequently)
+  onUpdate: function (state, binInformation, formHasErrors) {
+    console.log("STATE: ", state);
+    console.log(binInformation);
+    console.log(formHasErrors);
+  },
+  // optional callback function that will trigger after the form has loaded
+  onLoad: function () {
+    // custom code to run when the form has loaded
+  },
+  // optional callback function that will be called when the form is submitted
+  // NOTE: adding this option will automatically create a submit button for you.
+  // If you do not want to use the default button and create your own,
+  // do not supply this function and instead create your own submit button
+  // and attach the onSubmit function to it manually.
+  onSubmit,
+  // optional param to set the label for the submit button that is auto generated
+  submitLabel: "Create Token",
+};
+
+// create Finix.js Token Form
+const form = window.Finix.TokenForm("form-element", options);
+
+// submit function that will be called when the form is submitted
+function onSubmit() {
+  form.submit("sandbox", "APgPDQrLD52TYvqazjHJJchM", function (err, res) {
+    // get token ID from response
+    const tokenData = res.data || {};
+    const token = tokenData.id;
+    alert("Your token ID is: " + token);
+    console.log(tokenData);
+  });
+}
