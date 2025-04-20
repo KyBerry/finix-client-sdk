@@ -1,4 +1,5 @@
 import { BasePaymentForm } from "@/products";
+
 import type { EnvironmentConfig, FormConfig, FieldName, FieldState, FinixTokenResponse, FormState, IframeMessage } from "@/interfaces/types";
 
 export class BankPaymentForm extends BasePaymentForm {

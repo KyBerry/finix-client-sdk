@@ -1,5 +1,3 @@
-import type { FormField } from "@/interfaces/types";
-
 export const FINIX_ENVIRONMENT = {
   QA: "qa",
   SANDBOX: "sandbox",
@@ -30,31 +28,26 @@ export const CARD_FORM_FIELDS = [
   {
     id: "name",
     label: "Name",
-    placeholder: "Cardholder Name",
+    placeholder: { text: "Cardholder Name", hideOnFocus: true },
     autoComplete: "cc-name",
-    required: false,
   },
   {
     id: "number",
     label: "Card Number",
-    placeholder: "4111 1111 1111 1111",
+    placeholder: { text: "4111 1111 1111 1111", hideOnFocus: true },
     autoComplete: "cc-number",
-    required: true,
   },
   {
     id: "expiration_date",
     label: "Expiration",
-    placeholder: "MM/YYYY",
+    placeholder: { text: "MM/YYYY", hideOnFocus: true },
     autoComplete: "cc-exp",
-    required: true,
   },
   {
     id: "security_code",
     label: "CVV",
-    placeholder: "CVV",
-    validation: "cardCVC",
+    placeholder: { text: "CVV", hideOnFocus: true },
     autoComplete: "cc-csc",
-    required: true,
   },
 ] as const;
 
@@ -65,26 +58,27 @@ export const BANK_FORM_FIELDS = [
   {
     id: "name",
     label: "Name",
-    placeholder: "Cardholder Name",
+    placeholder: { text: "Cardholder Name", hideOnFocus: true },
     autoComplete: "name",
-    required: false,
+    validation: "required",
   },
   {
     id: "account_number",
     label: "Account number",
-    placeholder: "Account number",
-    autoComplete: "off",
-    required: true,
+    placeholder: { text: "Account number", hideOnFocus: true },
+    validation: "required",
   },
   {
     id: "bank_code",
     label: "Routing number",
-    placeholder: "Routing number",
+    placeholder: { text: "Routing number", hideOnFocus: true },
+    validation: "required",
   },
   {
     id: "account_type",
     label: "Account type",
-    placeholder: "Account type",
+    placeholder: { text: "Account type", hideOnFocus: true },
+    validation: "required",
   },
 ] as const;
 
@@ -95,43 +89,38 @@ export const ADDRESS_FORM_FIELDS = [
   {
     id: "address_line1",
     label: "Address Line 1",
-    placeholder: "Address Line 1",
+    placeholder: { text: "Address Line 1", hideOnFocus: true },
     autoComplete: "address-line1",
-    required: false,
   },
   {
     id: "address_line2",
     label: "Address Line 2",
-    placeholder: "Address Line 2",
+    placeholder: { text: "Address Line 2", hideOnFocus: true },
     autoComplete: "address-line2",
-    required: false,
   },
   {
     id: "address_city",
     label: "City",
-    placeholder: "City",
+    placeholder: { text: "City", hideOnFocus: true },
     autoComplete: "address-level2",
-    required: false,
   },
   {
     id: "address_state",
     label: "State",
-    placeholder: "State",
+    placeholder: { text: "State", hideOnFocus: true },
     autoComplete: "address-level1",
-    required: false,
   },
   {
     id: "address_postal_code",
     label: "Postal code",
-    placeholder: "Postal code",
+    placeholder: { text: "Postal code", hideOnFocus: true },
     autoComplete: "postal-code",
-    required: false,
   },
   {
     id: "address_country",
     label: "Country",
-    placeholder: "Country",
+    placeholder: { text: "Country", hideOnFocus: true },
     autoComplete: "country",
-    required: false,
+    defaultOption: "USA",
   },
 ] as const;
