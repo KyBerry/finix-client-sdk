@@ -8,23 +8,32 @@
  * only be available in browser environments.
  */
 
-// Export main classes
-export { Finix } from "./core/finix";
+// --- Core Creator ---
+export { PaymentFormCreator } from "./creators/payment-form-creator";
 
-// Export enum and constants
-export { Environment, PAYMENT_INSTRUMENTS, CARD_BRANDS, InitializationStatus } from "./core/types";
-
-// Export types (using export type for type re-exports)
-export type { CardBrand, FormOptions, FieldOptions, StyleOptions, Font, Fonts, ValidationResult, BinInformation, FormId, ApplicationId, TokenId, FieldName, PaymentType, FormState, FormError } from "./core/types";
-
-// Export validators for direct use
-export { validateCardNumber, validateExpirationDate, validateSecurityCode, validateRoutingNumber, validateAccountNumber, validateName, validatePostalCode, detectCardBrand } from "./core/validators";
-
-// Export store for advanced use cases
-export { Store, createStore } from "./state/store";
-
-// Export React integration
-export { useFinixForm, FinixForm } from "./react/hooks";
-
-// Export Next.js integration
-export { NextFinixForm, useNextFinixForm, withClientSideRendering } from "./next/index";
+// --- Core Types ---
+export type {
+  // Configuration Types
+  EnvironmentConfig,
+  FormConfig,
+  // Core Enum/Union Types
+  FormType,
+  // Supporting Types for Configuration
+  StylesConfig,
+  FontConfig,
+  Placeholder,
+  FormCallbacks,
+  // State & Response Types
+  FieldState,
+  FormState, // Note: This is generic, might be complex for end-users
+  FinixTokenResponse,
+  // Field Name Types (might be useful for callbacks/state inspection)
+  FieldName,
+  CardFieldName,
+  BankFieldName,
+  AddressFieldName,
+  // Other related types if needed by consumers
+  // AvailableFieldNames, // Potentially too complex for direct export?
+  // HideableField,
+  // ... etc
+} from "./types";

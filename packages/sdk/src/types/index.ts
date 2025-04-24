@@ -16,7 +16,7 @@ export type FinixEnvironment = (typeof FINIX_ENVIRONMENT)[keyof typeof FINIX_ENV
 // Field Names
 // -------------------------------------------------------------------------
 export type CardFieldName = "name" | "number" | "expiration_date" | "security_code";
-export type BankFieldName = "name" | "account_number" | "bank_code" | "account_type";
+export type BankFieldName = "name" | "account_number" | "bank_code" | "account_type" | "transit_number" | "institution_number";
 export type AddressFieldName = "address_line1" | "address_line2" | "address_city" | "address_state" | "address_region" | "address_country" | "address_postal_code";
 
 export type FieldName = CardFieldName | BankFieldName | AddressFieldName;

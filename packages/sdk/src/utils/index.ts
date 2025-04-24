@@ -23,13 +23,19 @@ interface IframeFieldConfig {
 }
 
 // Helper to get the default properties (like autoComplete, validation) for a field
-function getDefaultFieldProps(fieldName: FieldName): { autoComplete?: string; validation?: string; defaultPlaceholder?: Placeholder } {
+export function getDefaultFieldProps(fieldName: FieldName): {
+  autoComplete?: string;
+  validation?: string;
+  defaultPlaceholder?: Placeholder;
+  defaultLabel?: string;
+} {
   const allDefaults = [...CARD_FORM_FIELDS, ...BANK_FORM_FIELDS, ...ADDRESS_FORM_FIELDS];
   const props = allDefaults.find((f) => f.id === fieldName);
   return {
     autoComplete: props?.autoComplete,
     validation: props?.validation,
     defaultPlaceholder: props?.placeholder,
+    defaultLabel: props?.label,
   };
 }
 
