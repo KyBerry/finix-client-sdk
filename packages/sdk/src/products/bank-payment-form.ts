@@ -1,43 +1,47 @@
 import { BasePaymentForm } from "@/products";
 
-import type { EnvironmentConfig, FormConfig, FieldName, FieldState, FinixTokenResponse, FormState, IframeMessage } from "@/interfaces/types";
+import { getVisibleFields } from "@/types";
+import type { EnvironmentConfig, FormConfig, FieldName, FieldState, FinixTokenResponse, FormState, IframeMessage } from "@/types";
 
-export class BankPaymentForm extends BasePaymentForm {
-  private formConfig: FormConfig<"bank">;
+export class BankPaymentForm extends BasePaymentForm<"bank"> {
+  private formState: FormState<"bank", boolean> = {};
 
   constructor(environment: EnvironmentConfig, formConfig: FormConfig<"bank">) {
     super(environment, formConfig);
-    this.formConfig = formConfig;
     this.initializeFields();
     this.initializeFormState();
   }
 
-  protected initializeFields(): void {}
+  protected initializeFields(): void {
+    // We're extending BasePaymentForm which has fields as HTMLIFrameElement[]
+    // This method should prepare or configure but not store the field configs
+    // The field configurations will be created during rendering
+  }
 
-  /**
-   * Initialize form state with empty values for all fields
-   */
   protected initializeFormState(): void {
-    const initialState: Partial<FormState> = {};
+    const visibleFields = getVisibleFields({
+      paymentType: this.config.paymentType,
+      hideFields: this.config.hideFields,
+      showAddress: this.config.showAddress,
+    });
 
-    // Initialize state for all fields
-    // this.fields.forEach((field) => {
-    //   initialState[field.type as FieldName] = {
-    //     isDirty: false,
-    //     isFocused: false,
-    //     errorMessages: [],
-    //   };
-    // });
-
-    // this.formState = initialState as FormState;
+    for (const fieldId of visibleFields) {
+      this.formState[fieldId] = {
+        isDirty: false,
+        isFocused: false,
+        errorMessages: [],
+      };
+    }
   }
 
   getFormState(): FormState {
-    throw new Error("Method not implemented.");
+    return this.formState;
   }
+
   setFormState(fieldName: FieldName, state: FieldState): void {
-    throw new Error("Method not implemented.");
+    // Only update state for fields that exist in the form
   }
+
   protected createFieldConfig(fieldType: string, formConfig: any) {
     throw new Error("Method not implemented.");
   }

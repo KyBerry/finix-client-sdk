@@ -1,7 +1,7 @@
 import { BaseFormCreator } from "./base-form-creator";
 import { BankPaymentForm } from "@/products/bank-payment-form";
 
-import type { PaymentForm, FormOptions } from "@/interfaces/types";
+import type { FormConfig } from "@/types";
 
 /**
  * Concrete creator for bank payment forms
@@ -10,7 +10,7 @@ export class BankFormCreator extends BaseFormCreator<"bank"> {
   /**
    * Create a bank payment form
    */
-  createForm(options: FormOptions<"bank">): PaymentForm {
+  createForm(formConfig: FormConfig<"bank">) {
     return new BankPaymentForm();
   }
 }

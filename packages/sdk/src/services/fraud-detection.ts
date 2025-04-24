@@ -1,6 +1,6 @@
 import { BEACON_KEYS, API_URLS } from "@/constants";
 
-import type { FinixEnvironment } from "@/interfaces/types";
+import type { FinixEnvironment } from "@/types";
 
 /**
  * Declares the global _sift array for TypeScript

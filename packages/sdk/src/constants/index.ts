@@ -124,3 +124,111 @@ export const ADDRESS_FORM_FIELDS = [
     defaultOption: "USA",
   },
 ] as const;
+
+export const DEFAULT_CARD_FIELD_STATE = {
+  expiration_date: {
+    isDirty: false,
+    isFocused: false,
+    errorMessages: [],
+    height: 50,
+  },
+  name: {
+    isDirty: false,
+    isFocused: false,
+    errorMessages: [],
+    height: 50,
+  },
+  number: {
+    isDirty: false,
+    isFocused: false,
+    errorMessages: [],
+    height: 50,
+  },
+  security_code: {
+    isDirty: false,
+    isFocused: false,
+    errorMessages: [],
+    height: 50,
+  },
+} as const;
+
+export const DEFAULT_BANK_FIELD_STATE = {
+  name: {
+    isDirty: false,
+    isFocused: false,
+    errorMessages: [],
+    height: 50,
+  },
+  bank_code: {
+    isDirty: false,
+    isFocused: false,
+    errorMessages: [],
+    height: 50,
+  },
+  account_type: {
+    isDirty: false,
+    isFocused: false,
+    errorMessages: [],
+    height: 50,
+    selected: "",
+  },
+  transit_number: {
+    isDirty: false,
+    isFocused: false,
+    errorMessages: [],
+    height: 50,
+  },
+  institution_number: {
+    isDirty: false,
+    isFocused: false,
+    errorMessages: [],
+    height: 50,
+  },
+};
+
+export const DEFAULT_TOKEN_FIELD_STATE = {
+  ...DEFAULT_CARD_FIELD_STATE,
+  ...DEFAULT_BANK_FIELD_STATE,
+} as const;
+
+export const DEFAULT_ADDRESS_FIELD_STATE = {
+  "address.line1": {
+    isDirty: false,
+    isFocused: false,
+    errorMessages: [],
+    height: 50,
+  },
+  "address.line2": {
+    isDirty: false,
+    isFocused: false,
+    errorMessages: [],
+    height: 50,
+  },
+  "address.city": {
+    isDirty: false,
+    isFocused: false,
+    errorMessages: [],
+    height: 50,
+  },
+  "address.postal_code": {
+    isDirty: false,
+    isFocused: false,
+    errorMessages: [],
+    height: 50,
+  },
+  "address.region": {
+    isDirty: false,
+    isFocused: false,
+    errorMessages: [],
+    height: 50,
+    selected: "",
+  },
+  "address.country": {
+    country: "USA",
+    isDirty: false,
+    isFocused: false,
+    errorMessages: [],
+    height: 50,
+    selected: "USA",
+  },
+} as const;

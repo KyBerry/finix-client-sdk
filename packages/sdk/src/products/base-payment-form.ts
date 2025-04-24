@@ -1,12 +1,16 @@
-import { FinixTokenResponse, FormId } from "@/types";
 import { createBrandedId, generateTimestampedId } from "@/utils";
 
-import type { EnvironmentConfig, FieldName, FieldState, FormConfig, FormState, FormType, IframeMessage } from "@/interfaces/types";
+import { getVisibleFields } from "@/types";
+import type { FinixTokenResponse, FormId, EnvironmentConfig, FieldName, FieldState, FormConfig, FormState, FormType, IframeMessage } from "@/types";
 
 export abstract class BasePaymentForm<TFormType extends FormType = FormType> {
-  protected readonly formId: string;
+  protected readonly formId: FormId;
   protected readonly environment: EnvironmentConfig;
   protected readonly config: FormConfig<TFormType>;
+  protected formState: FormState<TFormType, boolean> = {};
+  protected binInformation: Record<string, unknown> = {};
+  protected fields: HTMLIFrameElement[] = [];
+  protected onSubmitHandler?: () => void;
 
   private messageHandlers: Array<(event: MessageEvent) => void> = [];
 
@@ -14,6 +18,9 @@ export abstract class BasePaymentForm<TFormType extends FormType = FormType> {
     this.environment = environment;
     this.config = config;
     this.formId = createBrandedId<FormId>(generateTimestampedId(`form-`));
+
+    // Initialize form state and fields
+    this.initializeFormState();
   }
 
   // TODO: I think we need to check if the window object is available?
@@ -35,6 +42,35 @@ export abstract class BasePaymentForm<TFormType extends FormType = FormType> {
 
     // Set up message listener with the handler from concrete implementation
     this.setupMessageListener(this.handleMessage.bind(this));
+  }
+
+  protected initializeFormState(): void {
+    const visibleFields = getVisibleFields({
+      paymentType: this.config.paymentType,
+      hideFields: this.config.hideFields,
+      showAddress: this.config.showAddress,
+    });
+
+    for (const fieldId of visibleFields) {
+      // Type assertion to tell TypeScript this is a valid field name
+      const typedFieldId = fieldId as keyof FormState<TFormType, boolean>;
+      this.formState[typedFieldId] = {
+        isDirty: false,
+        isFocused: false,
+        errorMessages: [],
+      };
+    }
+
+    // Apply default values if provided in config
+    if (this.config.defaultValues) {
+      for (const [field, value] of Object.entries(this.config.defaultValues)) {
+        // Type assertion for the field key
+        const typedField = field as keyof FormState<TFormType, boolean>;
+        if (this.formState[typedField]) {
+          this.formState[typedField].selected = value;
+        }
+      }
+    }
   }
 
   /**
@@ -89,25 +125,11 @@ export abstract class BasePaymentForm<TFormType extends FormType = FormType> {
     return allowedDomains.some((domain) => origin.startsWith(domain));
   }
 
-  abstract getFormState(): FormState;
-  abstract setFormState(fieldName: FieldName, state: FieldState): void;
-  abstract submit(): Promise<FinixTokenResponse>;
-
-  /**
-   * Update submit button state based on form validation
-   */
+  protected abstract getFormState(): FormState;
+  protected abstract setFormState(fieldName: FieldName, state: FieldState): void;
+  protected abstract submit(): Promise<FinixTokenResponse>;
   protected abstract updateSubmitButtonState(): void;
-
-  /**
-   * Initialize form fields
-   */
   protected abstract initializeFields(): void;
-
-  /**
-   * Initialize form state
-   */
-  protected abstract initializeFormState(): void;
-
   protected abstract addFormHeader(form: HTMLElement): void;
   protected abstract renderFormFields(form: HTMLElement): void;
   protected abstract addSubmitButton(form: HTMLElement): void;
