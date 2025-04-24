@@ -1,37 +1,13 @@
 import { BasePaymentForm } from "@/products";
 
 import { getVisibleFields } from "@/types";
-import type { EnvironmentConfig, FormConfig, FieldName, FieldState, FinixTokenResponse, FormState, IframeMessage } from "@/types";
+import { createIframeFieldConfig } from "@/utils";
+import { IFRAME_URL } from "@/constants";
+import type { EnvironmentConfig, FormConfig, FieldName, FieldState, FinixTokenResponse, FormState, IframeMessage, PaymentInstrumentType, AvailableFieldNames } from "@/types";
 
 export class BankPaymentForm extends BasePaymentForm<"bank"> {
-  private formState: FormState<"bank", boolean> = {};
-
   constructor(environment: EnvironmentConfig, formConfig: FormConfig<"bank">) {
     super(environment, formConfig);
-    this.initializeFields();
-    this.initializeFormState();
-  }
-
-  protected initializeFields(): void {
-    // We're extending BasePaymentForm which has fields as HTMLIFrameElement[]
-    // This method should prepare or configure but not store the field configs
-    // The field configurations will be created during rendering
-  }
-
-  protected initializeFormState(): void {
-    const visibleFields = getVisibleFields({
-      paymentType: this.config.paymentType,
-      hideFields: this.config.hideFields,
-      showAddress: this.config.showAddress,
-    });
-
-    for (const fieldId of visibleFields) {
-      this.formState[fieldId] = {
-        isDirty: false,
-        isFocused: false,
-        errorMessages: [],
-      };
-    }
   }
 
   getFormState(): FormState {
@@ -39,12 +15,14 @@ export class BankPaymentForm extends BasePaymentForm<"bank"> {
   }
 
   setFormState(fieldName: FieldName, state: FieldState): void {
-    // Only update state for fields that exist in the form
+    const typedField = fieldName as keyof typeof this.formState;
+    if (this.formState[typedField] !== undefined) {
+      this.formState[typedField] = state;
+    } else {
+      console.warn(`Attempted to set state for non-existent field: ${fieldName}`);
+    }
   }
 
-  protected createFieldConfig(fieldType: string, formConfig: any) {
-    throw new Error("Method not implemented.");
-  }
   protected updateSubmitButtonState(): void {
     throw new Error("Method not implemented.");
   }
@@ -53,10 +31,41 @@ export class BankPaymentForm extends BasePaymentForm<"bank"> {
     return new Promise(() => {});
   }
 
-  public render(): void {}
-
   protected addFormHeader(container: HTMLElement): void {}
-  protected renderFormFields(container: HTMLElement): void {}
+
+  protected initializeFields(): void {}
+
+  protected renderFormFields(container: HTMLElement): void {
+    const showAddress = !!this.config.showAddress;
+
+    const visibleFields = getVisibleFields({
+      paymentType: "bank",
+      hideFields: this.config.hideFields,
+      showAddress: showAddress,
+    }) as AvailableFieldNames<"bank", typeof showAddress>[];
+
+    const paymentType: PaymentInstrumentType<"bank"> = "BANK_ACCOUNT";
+
+    this.fields = [];
+
+    visibleFields.forEach((fieldName) => {
+      const fieldConfig = createIframeFieldConfig<"bank", typeof showAddress>(fieldName, this.formId, this.config, paymentType);
+
+      const encodedConfig = btoa(JSON.stringify(fieldConfig));
+      const iframeUrl = `${IFRAME_URL}${encodedConfig}`;
+
+      const iframe = document.createElement("iframe");
+      iframe.src = iframeUrl;
+      iframe.style.border = "none";
+      iframe.style.width = "100%";
+      iframe.style.height = "50px";
+      iframe.setAttribute("data-field-name", fieldName);
+
+      container.appendChild(iframe);
+      this.fields.push(iframe);
+    });
+  }
+
   protected addSubmitButton(container: HTMLElement): void {}
   protected handleMessage(message: IframeMessage): void {}
 }

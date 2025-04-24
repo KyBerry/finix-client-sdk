@@ -1,7 +1,9 @@
 import { createBrandedId, generateTimestampedId } from "@/utils";
 
+import { DEFAULT_ADDRESS_FIELD_STATE, DEFAULT_BANK_FIELD_STATE, DEFAULT_CARD_FIELD_STATE, DEFAULT_TOKEN_FIELD_STATE } from "@/constants";
+
 import { getVisibleFields } from "@/types";
-import type { FinixTokenResponse, FormId, EnvironmentConfig, FieldName, FieldState, FormConfig, FormState, FormType, IframeMessage } from "@/types";
+import type { AddressFieldName, AvailableFieldNames, BankFieldName, CardFieldName, FinixTokenResponse, FormId, EnvironmentConfig, FieldName, FieldState, FormConfig, FormState, FormType, IframeMessage } from "@/types";
 
 export abstract class BasePaymentForm<TFormType extends FormType = FormType> {
   protected readonly formId: FormId;
@@ -45,32 +47,74 @@ export abstract class BasePaymentForm<TFormType extends FormType = FormType> {
   }
 
   protected initializeFormState(): void {
+    // Determine the correct base default state based on form type
+    let baseDefaultState: Partial<Record<FieldName, FieldState>>;
+    switch (this.config.paymentType) {
+      case "card":
+        baseDefaultState = DEFAULT_CARD_FIELD_STATE;
+        break;
+      case "bank":
+        baseDefaultState = DEFAULT_BANK_FIELD_STATE;
+        break;
+      case "token":
+        baseDefaultState = DEFAULT_TOKEN_FIELD_STATE;
+        break;
+      default:
+        baseDefaultState = {}; // Should not happen with proper typing
+    }
+
+    // Include default address state if showAddress is true
+    const fullDefaultState: Partial<Record<FieldName, FieldState>> = this.config.showAddress ? { ...baseDefaultState, ...DEFAULT_ADDRESS_FIELD_STATE } : baseDefaultState;
+
+    // Get the fields that should be visible based on config (hideFields, showAddress)
     const visibleFields = getVisibleFields({
       paymentType: this.config.paymentType,
       hideFields: this.config.hideFields,
       showAddress: this.config.showAddress,
     });
+    const visibleFieldsSet = new Set<AvailableFieldNames<TFormType, boolean>>(visibleFields);
 
-    for (const fieldId of visibleFields) {
-      // Type assertion to tell TypeScript this is a valid field name
-      const typedFieldId = fieldId as keyof FormState<TFormType, boolean>;
-      this.formState[typedFieldId] = {
-        isDirty: false,
-        isFocused: false,
-        errorMessages: [],
-      };
+    // Filter the full default state to include only visible fields
+    const initialVisibleState: FormState<TFormType, boolean> = {};
+    for (const field of visibleFieldsSet) {
+      // Assert field is a key of fullDefaultState, although visibleFields should guarantee this
+      const typedField = field as keyof typeof fullDefaultState;
+      if (fullDefaultState[typedField]) {
+        const defaultStateForField = fullDefaultState[typedField];
+        const stateFieldKey = field as keyof FormState<TFormType, boolean>;
+        initialVisibleState[stateFieldKey] = {
+          ...defaultStateForField,
+          errorMessages: [...defaultStateForField.errorMessages],
+        };
+      } else {
+        // If somehow a visible field doesn't have a default, provide a basic one
+        // This case should be rare with comprehensive default constants
+        // Assert field is a valid key for initialVisibleState
+        const stateFieldKey = field as keyof FormState<TFormType, boolean>;
+        initialVisibleState[stateFieldKey] = {
+          isDirty: false,
+          isFocused: false,
+          errorMessages: [],
+        };
+      }
     }
 
-    // Apply default values if provided in config
+    // Apply default values from config, overriding the defaults from constants
     if (this.config.defaultValues) {
       for (const [field, value] of Object.entries(this.config.defaultValues)) {
-        // Type assertion for the field key
         const typedField = field as keyof FormState<TFormType, boolean>;
-        if (this.formState[typedField]) {
-          this.formState[typedField].selected = value;
+        // Ensure the field exists in our initialized state before applying default
+        if (initialVisibleState[typedField]) {
+          // Check if value is a string before assigning (as it comes from Object.entries as unknown)
+          if (typeof value === "string") {
+            initialVisibleState[typedField].selected = value;
+          }
         }
       }
     }
+
+    // Set the final initialized state
+    this.formState = initialVisibleState;
   }
 
   /**

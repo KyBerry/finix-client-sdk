@@ -28,7 +28,7 @@ export interface EnvironmentConfig {
   readonly environment: FinixEnvironment;
   readonly applicationId: string;
   readonly merchantId: string;
-  readonly fraudSessionId?: string;
+  fraudSessionId?: string;
   readonly enableFraudDetection?: boolean;
 }
 
