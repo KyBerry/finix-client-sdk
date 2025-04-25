@@ -122,6 +122,13 @@ export const ADDRESS_FORM_FIELDS = [
     validation: "",
   },
   {
+    id: "address_region",
+    label: "Region",
+    placeholder: { text: "Region", hideOnFocus: true },
+    autoComplete: "address-level1",
+    validation: "",
+  },
+  {
     id: "address_postal_code",
     label: "Postal code",
     placeholder: { text: "Postal code", hideOnFocus: true },
@@ -216,6 +223,11 @@ export const DEFAULT_ADDRESS_FIELD_STATE = {
     isFocused: false,
     errorMessages: [],
     selected: "",
+  },
+  address_region: {
+    isDirty: false,
+    isFocused: false,
+    errorMessages: [],
   },
   address_country: {
     country: "USA",

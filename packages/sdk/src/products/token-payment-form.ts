@@ -1,16 +1,20 @@
-import { BasePaymentForm } from "@/products";
+import { BasePaymentForm } from "./base-payment-form";
 import { getVisibleFields } from "@/types";
 import { createIframeFieldConfig, getDefaultFieldProps, generateTimestampedId } from "@/utils";
-import { IFRAME_URL } from "@/constants";
-import type { EnvironmentConfig, FormConfig, FieldName, FieldState, FinixTokenResponse, FormState, IframeMessage, PaymentInstrumentType, AvailableFieldNames, Placeholder, FormType, HideableField } from "@/types";
+import { DEFAULT_CARD_FIELD_STATE, DEFAULT_BANK_FIELD_STATE, DEFAULT_ADDRESS_FIELD_STATE, IFRAME_URL } from "@/constants";
+
+import type { EnvironmentConfig, FormConfig, FieldName, FieldState, FinixTokenResponse, FormState, IframeMessage, PaymentInstrumentType, AvailableFieldNames, HideableField } from "@/types";
 
 export class TokenPaymentForm extends BasePaymentForm<"token"> {
   // --- Token Form Specific State ---
   private selectedDisplayType: "card" | "bank" = "card"; // Default to showing card fields
   private fieldsContainer: HTMLElement | null = null; // Reference to the container for fields
+  private paymentInstrumentType: PaymentInstrumentType<"token"> = "PAYMENT_CARD";
 
   constructor(environment: EnvironmentConfig, formConfig: FormConfig<"token">) {
     super(environment, formConfig);
+    // Initialize state for the default display type ('card')
+    this._initializeStateForDisplayType(this.selectedDisplayType);
   }
 
   // --- Implement Abstract Methods ---
@@ -29,40 +33,36 @@ export class TokenPaymentForm extends BasePaymentForm<"token"> {
   }
 
   async submit(): Promise<FinixTokenResponse> {
-    // 1. Generate Unique Message ID
-    const messageId = generateTimestampedId("submit-");
-
-    // 2. Create and Store Promise
-    return new Promise<FinixTokenResponse>((resolve, reject) => {
+    const messageId = generateTimestampedId("msg-");
+    const promise = new Promise<FinixTokenResponse>((resolve, reject) => {
       this.submissionPromises.set(messageId, { resolve, reject });
+    });
 
-      // 3. Find Target Iframe (Using first field - needs verification for token forms)
-      // TODO: Verify which iframe should receive the submit message for token forms.
-      const targetIframe = this.fields[0];
-      if (!targetIframe?.contentWindow) {
-        this.submissionPromises.delete(messageId);
-        return reject(new Error("Target iframe for submission not found or not accessible."));
-      }
+    const payload = {
+      environment: this.environment.environment,
+      applicationId: this.environment.applicationId,
+      ...(this.environment.fraudSessionId && { fraudSessionId: this.environment.fraudSessionId }),
+      data: {
+        paymentInstrumentType: this.paymentInstrumentType, // Add current type
+      },
+    };
 
-      // 4. Construct Message Payload
-      const messagePayload = {
+    const firstIframe = this.fields[0];
+    if (!firstIframe?.contentWindow) {
+      throw new Error("Target iframe for submission not found");
+    }
+
+    firstIframe.contentWindow.postMessage(
+      {
         messageId: messageId,
         messageName: "submit",
-        messageData: {
-          environment: this.environment.environment,
-          applicationId: this.environment.applicationId,
-          ...(this.environment.fraudSessionId && { fraudSessionId: this.environment.fraudSessionId }),
-          data: {},
-        },
-      };
+        messageData: payload,
+      },
+      "https://js.finix.com",
+    );
 
-      // 5. Send Message
-      const targetOrigin = "https://js.finix.com"; // TODO: Confirm origin
-      targetIframe.contentWindow.postMessage(messagePayload, targetOrigin);
-
-      // 6. Trigger onSubmit Callback (Optional)
-      this.config.callbacks?.onSubmit?.(messagePayload);
-    });
+    this.config.callbacks?.onSubmit?.(payload);
+    return promise;
   }
 
   protected updateSubmitButtonState(isFormValid: boolean): void {
@@ -83,14 +83,14 @@ export class TokenPaymentForm extends BasePaymentForm<"token"> {
     toggleContainer.className = "finix-payment-type-toggle"; // Add class for styling
 
     const cardButton = document.createElement("button");
-    cardButton.id = `${this.formId}-card-toggle`;
+    cardButton.id = `${this.formId}-toggle-card`;
     cardButton.className = "finix-button finix-card-button active"; // Card is active by default
     cardButton.type = "button";
     cardButton.innerHTML = "<span>Card</span>"; // Simple text for now
     cardButton.onclick = () => this._switchToPaymentType("card", cardButton, bankButton);
 
     const bankButton = document.createElement("button");
-    bankButton.id = `${this.formId}-bank-toggle`;
+    bankButton.id = `${this.formId}-toggle-bank`;
     bankButton.className = "finix-button finix-bank-button";
     bankButton.type = "button";
     bankButton.innerHTML = "<span>Bank Account</span>";
@@ -113,15 +113,23 @@ export class TokenPaymentForm extends BasePaymentForm<"token"> {
     if (this.selectedDisplayType === type) return; // Already selected
 
     this.selectedDisplayType = type;
+    // Update the payment instrument type property
+    this.paymentInstrumentType = type === "card" ? "PAYMENT_CARD" : "BANK_ACCOUNT";
 
     // Update button styles
     cardBtn.classList.toggle("active", type === "card");
     bankBtn.classList.toggle("active", type === "bank");
 
+    // Re-initialize the form state for the new type using the new dedicated method
+    this._initializeStateForDisplayType(type);
+
     // Clear current fields and re-render
     if (this.fieldsContainer) {
       this.renderFormFields(this.fieldsContainer);
     }
+
+    // After re-rendering and state reset, update submit button based on new state validity
+    this.updateSubmitButtonState(this._checkFormValidity());
   }
 
   protected renderFormFields(container: HTMLElement): void {
@@ -151,7 +159,20 @@ export class TokenPaymentForm extends BasePaymentForm<"token"> {
 
     visibleFields.forEach((fieldName) => {
       const fieldDefaults = getDefaultFieldProps(fieldName);
-      const fieldConfig = createIframeFieldConfig<typeof fieldsToRenderType, typeof showAddress>(fieldName, this.formId, this.config as unknown as FormConfig<typeof fieldsToRenderType, typeof showAddress>, paymentType);
+
+      // Determine the specific types for the current rendering context
+      const currentFieldsType = fieldsToRenderType; // 'card' or 'bank'
+      const currentPaymentType = currentFieldsType === "card" ? "PAYMENT_CARD" : "BANK_ACCOUNT";
+
+      // Remove the previous cast. createIframeFieldConfig now handles ConfigT vs RenderT.
+      // Generics <ConfigT, RenderT, S> will be inferred.
+      // ConfigT = 'token', RenderT = 'card' | 'bank', S = boolean
+      const fieldConfig = createIframeFieldConfig(
+        fieldName,
+        this.formId,
+        this.config, // Pass FormConfig<'token'> directly
+        currentPaymentType, // Pass PaymentInstrumentType<'card' | 'bank'>
+      );
 
       const encodedConfig = btoa(JSON.stringify(fieldConfig));
       const iframeUrl = `${IFRAME_URL}${encodedConfig}`;
@@ -238,12 +259,20 @@ export class TokenPaymentForm extends BasePaymentForm<"token"> {
     // Handle State vs Region (relevant for both card and bank if address shown)
     const stateWrapper = getWrapper("address_state");
     const regionWrapper = getWrapper("address_region");
-    if (country === "USA") {
-      stateWrapper?.style.setProperty("display", "block");
-      regionWrapper?.style.setProperty("display", "none");
+    const showAddress = !!this.config.showAddress;
+
+    if (showAddress) {
+      if (country === "USA") {
+        stateWrapper?.style.setProperty("display", "block");
+        regionWrapper?.style.setProperty("display", "none");
+      } else {
+        stateWrapper?.style.setProperty("display", "none");
+        regionWrapper?.style.setProperty("display", "block");
+      }
     } else {
+      // Ensure both are hidden if showAddress is false
       stateWrapper?.style.setProperty("display", "none");
-      regionWrapper?.style.setProperty("display", "block");
+      regionWrapper?.style.setProperty("display", "none");
     }
 
     // Handle Bank fields ONLY if bank form is currently displayed
@@ -262,5 +291,80 @@ export class TokenPaymentForm extends BasePaymentForm<"token"> {
         institutionWrapper?.style.setProperty("display", "none");
       }
     }
+  }
+
+  /**
+   * Initializes/Resets the form state specifically for the given display type (card or bank).
+   * This is used by TokenPaymentForm during initial load and toggling.
+   * @param displayType The type of form to initialize state for ('card' or 'bank').
+   */
+  private _initializeStateForDisplayType(displayType: "card" | "bank"): void {
+    // Determine the correct base default state based on the provided displayType
+    let baseDefaultState: Partial<Record<FieldName, FieldState>>;
+    switch (displayType) {
+      case "card":
+        baseDefaultState = DEFAULT_CARD_FIELD_STATE;
+        break;
+      case "bank":
+        baseDefaultState = DEFAULT_BANK_FIELD_STATE;
+        break;
+    }
+
+    const showAddress = !!this.config.showAddress;
+    const fullDefaultState: Partial<Record<FieldName, FieldState>> = showAddress ? { ...baseDefaultState, ...DEFAULT_ADDRESS_FIELD_STATE } : baseDefaultState;
+
+    const visibleFields = getVisibleFields({
+      paymentType: displayType,
+      hideFields: this.config.hideFields as HideableField<typeof displayType, boolean>[],
+      showAddress: showAddress,
+    });
+    const visibleFieldsSet = new Set<AvailableFieldNames<typeof displayType, boolean>>(visibleFields as AvailableFieldNames<typeof displayType, boolean>[]);
+
+    const initialVisibleState: FormState<"token", boolean> = {};
+    for (const field of visibleFieldsSet) {
+      const typedField = field as keyof typeof fullDefaultState;
+      if (fullDefaultState[typedField]) {
+        const defaultStateForField = fullDefaultState[typedField];
+        const stateFieldKey = field as keyof FormState<"token", boolean>;
+        initialVisibleState[stateFieldKey] = {
+          ...defaultStateForField,
+          errorMessages: [...defaultStateForField.errorMessages],
+        };
+      } else {
+        const stateFieldKey = field as keyof FormState<"token", boolean>;
+        initialVisibleState[stateFieldKey] = {
+          isDirty: false,
+          isFocused: false,
+          errorMessages: [],
+        };
+      }
+    }
+
+    if (this.config.defaultValues) {
+      for (const [field, value] of Object.entries(this.config.defaultValues)) {
+        if (visibleFieldsSet.has(field as AvailableFieldNames<typeof displayType, boolean>)) {
+          const typedField = field as keyof FormState<"token", boolean>;
+          if (initialVisibleState[typedField]) {
+            if (typeof value === "string") {
+              initialVisibleState[typedField].selected = value;
+            }
+          }
+        }
+      }
+    }
+
+    this.formState = initialVisibleState;
+  }
+
+  protected _getVisibleFieldsForRender(): AvailableFieldNames<"token", boolean>[] {
+    // This method seems redundant now as renderFormFields calculates its own visible fields
+    // based on selectedDisplayType. We can potentially remove it or align its logic.
+    // For now, return an empty array or align it:
+    const { showAddress = false, hideFields = [] } = this.config;
+    return getVisibleFields({
+      paymentType: this.selectedDisplayType, // Use the current display type
+      hideFields: hideFields as HideableField<typeof this.selectedDisplayType, boolean>[],
+      showAddress,
+    });
   }
 }

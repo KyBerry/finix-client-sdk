@@ -7,8 +7,8 @@ import type { AddressFieldName, AvailableFieldNames, BankFieldName, CardFieldNam
 
 // Define structure for stored promise handlers
 interface SubmissionPromise {
-  resolve: (value: FinixTokenResponse) => void;
-  reject: (reason?: any) => void;
+  resolve: (value: FinixTokenResponse | PromiseLike<FinixTokenResponse>) => void;
+  reject: (reason?: Error) => void;
 }
 
 export abstract class BasePaymentForm<TFormType extends FormType = FormType> {
@@ -55,6 +55,9 @@ export abstract class BasePaymentForm<TFormType extends FormType = FormType> {
     this.config.callbacks?.onLoad?.();
   }
 
+  /**
+   * Initializes the form state based on the form's payment type.
+   */
   protected initializeFormState(): void {
     // Determine the correct base default state based on form type
     let baseDefaultState: Partial<Record<FieldName, FieldState>>;
@@ -66,20 +69,24 @@ export abstract class BasePaymentForm<TFormType extends FormType = FormType> {
         baseDefaultState = DEFAULT_BANK_FIELD_STATE;
         break;
       case "token":
-        baseDefaultState = DEFAULT_TOKEN_FIELD_STATE;
+        // For TokenForm initial load, default to card state.
+        // The override in TokenPaymentForm handles subsequent toggles.
+        baseDefaultState = DEFAULT_CARD_FIELD_STATE;
         break;
       default:
-        baseDefaultState = {}; // Should not happen with proper typing
+        baseDefaultState = {}; // Should not happen
     }
 
     // Include default address state if showAddress is true
-    const fullDefaultState: Partial<Record<FieldName, FieldState>> = this.config.showAddress ? { ...baseDefaultState, ...DEFAULT_ADDRESS_FIELD_STATE } : baseDefaultState;
+    const showAddress = !!this.config.showAddress;
+    const fullDefaultState: Partial<Record<FieldName, FieldState>> = showAddress ? { ...baseDefaultState, ...DEFAULT_ADDRESS_FIELD_STATE } : baseDefaultState;
 
     // Get the fields that should be visible based on config (hideFields, showAddress)
+    // Use the form's actual payment type here.
     const visibleFields = getVisibleFields({
       paymentType: this.config.paymentType,
       hideFields: this.config.hideFields,
-      showAddress: this.config.showAddress,
+      showAddress: showAddress,
     });
     const visibleFieldsSet = new Set<AvailableFieldNames<TFormType, boolean>>(visibleFields);
 
@@ -203,11 +210,12 @@ export abstract class BasePaymentForm<TFormType extends FormType = FormType> {
     const { messageName, messageData, messageId } = message;
 
     // Type guard for messageData based on messageName
-    const isFieldUpdateData = (data: any): data is { name: FieldName; state: FieldState } => {
-      return data && typeof data.name === "string" && typeof data.state === "object";
+    const isFieldUpdateData = (data: unknown): data is { name: FieldName; state: FieldState } => {
+      // Use type assertion or more careful checks if needed after 'unknown'
+      return typeof data === "object" && data !== null && "name" in data && typeof data.name === "string" && "state" in data && typeof data.state === "object";
     };
 
-    const isBinInfoData = (data: any): data is Record<string, unknown> => {
+    const isBinInfoData = (data: unknown): data is Record<string, unknown> => {
       // Add more specific checks if the structure is known
       return typeof data === "object" && data !== null;
     };
@@ -278,8 +286,10 @@ export abstract class BasePaymentForm<TFormType extends FormType = FormType> {
           } else {
             // messageName === "response-error"
             console.error("Finix Form Error:", messageData);
-            // Reject with the error data received from iframe
-            promiseHandlers.reject(messageData);
+            // Create an Error object for rejection
+            const error = new Error(`Iframe submission failed: ${JSON.stringify(messageData)}`);
+            promiseHandlers.reject(error);
+            // Pass the original error data to the callback
             this.config.callbacks?.onTokenizeError?.(messageData);
           }
           // Clean up the stored promise

@@ -2,12 +2,12 @@ import { BasePaymentForm } from "@/products";
 
 import { getVisibleFields } from "@/types";
 import { createIframeFieldConfig, getDefaultFieldProps, generateTimestampedId } from "@/utils";
-import { IFRAME_URL } from "@/constants";
-import type { EnvironmentConfig, FormConfig, FieldName, FieldState, FinixTokenResponse, FormState, IframeMessage, PaymentInstrumentType, AvailableFieldNames, Placeholder } from "@/types";
+import type { EnvironmentConfig, FormConfig, FieldName, FieldState, FinixTokenResponse, FormState, IframeMessage, AvailableFieldNames } from "@/types";
 
 export class CardPaymentForm extends BasePaymentForm<"card"> {
   constructor(environment: EnvironmentConfig, formConfig: FormConfig<"card">) {
     super(environment, formConfig);
+    this.initializeFormState();
   }
 
   getFormState(): FormState {
@@ -82,59 +82,65 @@ export class CardPaymentForm extends BasePaymentForm<"card"> {
 
   protected initializeFields(): void {}
 
+  protected _getVisibleFieldsForRender(): AvailableFieldNames<"card", boolean>[] {
+    const { showAddress = false, hideFields = [] } = this.config as FormConfig<"card", boolean>;
+    return getVisibleFields({ paymentType: "card", hideFields, showAddress });
+  }
+
   protected renderFormFields(container: HTMLElement): void {
-    const showAddress = !!this.config.showAddress;
-    const showLabels = !!this.config.showLabels;
+    const visibleFields = this._getVisibleFieldsForRender();
+    const { showAddress = false } = this.config;
 
-    const visibleFields = getVisibleFields({
-      paymentType: "card",
-      hideFields: this.config.hideFields,
-      showAddress: showAddress,
-    }) as AvailableFieldNames<"card", typeof showAddress>[];
-
-    const paymentType: PaymentInstrumentType<"card"> = "PAYMENT_CARD";
-
+    container.innerHTML = "";
     this.fields = [];
+
+    if (!Array.isArray(visibleFields)) {
+      console.error("visibleFields is not an array in renderFormFields:", visibleFields);
+      return;
+    }
 
     visibleFields.forEach((fieldName) => {
       const fieldDefaults = getDefaultFieldProps(fieldName);
-      const fieldConfig = createIframeFieldConfig<"card", typeof showAddress>(fieldName, this.formId, this.config, paymentType);
+      const fieldConfig = createIframeFieldConfig(fieldName, this.formId, this.config, "PAYMENT_CARD");
 
-      const encodedConfig = btoa(JSON.stringify(fieldConfig));
-      const iframeUrl = `${IFRAME_URL}${encodedConfig}`;
+      const wrapper = document.createElement("div");
+      const wrapperId = `${this.formId}-field-wrapper-${fieldName}`;
+      wrapper.id = wrapperId;
+      wrapper.className = wrapperId;
 
-      const fieldWrapper = document.createElement("div");
-      fieldWrapper.className = `${this.formId}-field-wrapper ${this.formId}-field-wrapper-${fieldName}`;
-
-      if (showLabels) {
+      if (this.config.showLabels) {
         const label = document.createElement("label");
         label.htmlFor = `${this.formId}-${fieldName}-iframe`;
-        label.textContent = this.config.labels?.[fieldName] || fieldDefaults.defaultLabel || fieldName;
-        fieldWrapper.appendChild(label);
+        label.textContent = this.config.labels?.[fieldName] ?? fieldDefaults.defaultLabel ?? fieldName;
+        wrapper.appendChild(label);
       }
 
+      const iframeContainer = document.createElement("div");
+      iframeContainer.id = `${this.formId}-${fieldName}-iframe`;
+      iframeContainer.className = `field ${fieldName}`;
+
       const iframe = document.createElement("iframe");
-      iframe.src = iframeUrl;
-      iframe.id = `${this.formId}-${fieldName}-iframe`;
+      iframe.setAttribute("data-field-name", fieldName);
+      const encodedConfig = btoa(JSON.stringify(fieldConfig));
+      iframe.src = `https://js.finix.com/v/1/payment-fields/index.html?${encodedConfig}`;
       iframe.style.border = "none";
       iframe.style.width = "100%";
       iframe.style.height = "50px";
-      iframe.setAttribute("data-field-name", fieldName);
 
-      fieldWrapper.appendChild(iframe);
+      iframeContainer.appendChild(iframe);
+      wrapper.appendChild(iframeContainer);
 
-      const validationMsg = document.createElement("span");
-      validationMsg.id = `${this.formId}-${fieldName}-validation`;
-      validationMsg.className = "validation-message";
-      validationMsg.style.color = "red";
-      validationMsg.style.fontSize = "0.8em";
-      validationMsg.style.display = "block";
-      fieldWrapper.appendChild(validationMsg);
+      const validationSpan = document.createElement("span");
+      validationSpan.id = `${this.formId}-${fieldName}-validation`;
+      validationSpan.className = `${fieldName}_validation validation`;
+      wrapper.appendChild(validationSpan);
 
-      container.appendChild(fieldWrapper);
+      container.appendChild(wrapper);
 
       this.fields.push(iframe);
     });
+
+    this._handleCountryChange(this.formState?.address_country?.selected?.toUpperCase() ?? "USA");
   }
 
   protected addSubmitButton(container: HTMLElement): void {
@@ -172,18 +178,17 @@ export class CardPaymentForm extends BasePaymentForm<"card"> {
    * @param country The uppercase country code (e.g., "USA")
    */
   protected _handleCountryChange(country: string): void {
-    const getWrapper = (field: FieldName): HTMLElement | null => document.querySelector(`.${this.formId}-field-wrapper-${field}`);
+    const stateWrapperId = `${this.formId}-field-wrapper-address_state`;
+    const regionWrapperId = `${this.formId}-field-wrapper-address_region`;
+    const stateWrapper = document.getElementById(stateWrapperId);
+    const regionWrapper = document.getElementById(regionWrapperId);
 
-    // TODO: Need to know the actual FieldName used for the non-US region field.
-    // Assuming 'address_region' for now based on finix.js
-    const stateWrapper = getWrapper("address_state");
-    const regionWrapper = getWrapper("address_region");
     if (country === "USA") {
-      stateWrapper?.style.setProperty("display", "block");
-      regionWrapper?.style.setProperty("display", "none");
+      if (stateWrapper) stateWrapper.style.display = "block";
+      if (regionWrapper) regionWrapper.style.display = "none";
     } else {
-      stateWrapper?.style.setProperty("display", "none");
-      regionWrapper?.style.setProperty("display", "block");
+      if (stateWrapper) stateWrapper.style.display = "none";
+      if (regionWrapper) regionWrapper.style.display = "block";
     }
   }
 }

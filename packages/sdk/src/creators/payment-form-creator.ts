@@ -16,6 +16,27 @@ export class PaymentFormCreator {
   protected fraudInitialized: boolean = false; // Track initialization
 
   constructor(environment: EnvironmentConfig) {
+    // --- Input Validation ---
+    if (!environment) {
+      throw new Error("PaymentFormCreator Error: EnvironmentConfig is required.");
+    }
+    if (!environment.applicationId || typeof environment.applicationId !== "string") {
+      throw new Error("PaymentFormCreator Error: EnvironmentConfig requires a valid applicationId (string).");
+    }
+    if (!environment.merchantId || typeof environment.merchantId !== "string") {
+      throw new Error("PaymentFormCreator Error: EnvironmentConfig requires a valid merchantId (string).");
+    }
+    if (!environment.environment || typeof environment.environment !== "string") {
+      // Also check environment itself
+      throw new Error("PaymentFormCreator Error: EnvironmentConfig requires a valid environment (string).");
+    }
+
+    // Optional: Warn if format looks incorrect (basic check)
+    if (!environment.applicationId.startsWith("AP")) {
+      console.warn("PaymentFormCreator Warning: applicationId does not start with 'AP'. Ensure it is correct.");
+    }
+    // --- End Input Validation ---
+
     // Clone to prevent external mutation. Type is now correctly EnvironmentConfig.
     this.environment = { ...environment };
   }
@@ -76,9 +97,6 @@ export class PaymentFormCreator {
   async renderForm<T extends FormType>(containerId: string, config: FormConfig<T>): Promise<void> {
     await this.initializeFraudDetection();
 
-    // Revert to using 'as any'. The switch statement didn't help TypeScript's
-    // overload resolution within this generic implementation.
-    // This cast is necessary here to satisfy the overloads when calling from generic context.
     const form = this.createForm(config as any);
 
     form.render(containerId);

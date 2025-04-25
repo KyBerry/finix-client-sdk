@@ -9,7 +9,7 @@
  */
 
 // --- Core Creator ---
-export { PaymentFormCreator } from "./creators/payment-form-creator";
+export { PaymentFormCreator } from "@/creators/payment-form-creator";
 
 // --- Core Types ---
 export type {
@@ -36,4 +36,7 @@ export type {
   // AvailableFieldNames, // Potentially too complex for direct export?
   // HideableField,
   // ... etc
-} from "./types";
+} from "@/types";
+
+// --- Constants ---
+export { FINIX_ENVIRONMENT } from "@/constants";

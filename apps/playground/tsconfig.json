@@ -4,7 +4,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@kyberry/ui/*": ["../../packages/ui/src/*"]
+      "@kyberry/ui/*": ["../../packages/ui/src/*"],
+      "@kyberry/finix-client-sdk": ["../../packages/sdk/src"],
+      "@kyberry/finix-client-sdk/*": ["../../packages/sdk/src/*"]
     },
     "plugins": [
       {
@@ -12,12 +14,6 @@
       }
     ]
   },
-  "include": [
-    "next-env.d.ts",
-    "next.config.mjs",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts"
-  ],
+  "include": ["next-env.d.ts", "next.config.mjs", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }

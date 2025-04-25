@@ -25,7 +25,9 @@ export function generateUUID(): string {
  * Useful for creating identifiers that are both unique and roughly sortable
  */
 export function generateTimestampedId(prefix = ""): string {
-  return `${prefix}${Date.now()}-${generateUUID()}`;
+  // Generate a short random sequence instead of a full UUID
+  const randomSuffix = Math.random().toString(36).substring(2, 8);
+  return `${prefix}${Date.now()}-${randomSuffix}`;
 }
 
 /**

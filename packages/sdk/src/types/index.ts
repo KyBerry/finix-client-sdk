@@ -137,14 +137,31 @@ export type StylesConfig = {
 };
 
 export interface FontConfig {
-  readonly fontFamily: string;
-  readonly url: string;
-  readonly format: FontFormat;
+  fontFamily: string;
+  url: string;
+  format: FontFormat;
 }
 
 export interface Placeholder {
-  readonly text: string;
-  readonly hideOnFocus?: boolean;
+  text: string;
+  hideOnFocus?: boolean;
+}
+
+// Define the structure of the object sent to the iframe for field configuration
+// Based on analysis of finix.js fieldConfig
+export interface IframeFieldConfig {
+  formId: FormId;
+  type: FieldName;
+  paymentInstrumentType: PaymentInstrumentType;
+  styles?: StylesConfig;
+  placeholder?: string | Placeholder;
+  validations?: string;
+  autoComplete?: string;
+  options?: "state" | "country" | "account_type";
+  defaultOption?: string;
+  errorMessage?: string;
+  fonts?: FontConfig[];
+  defaultValue?: string;
 }
 
 // -------------------------------------------------------------------------
