@@ -5,7 +5,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "lint": {
       "dependsOn": ["^lint"]
@@ -15,12 +15,12 @@
     },
     "test": {
       "dependsOn": ["^build"],
-      "inputs": ["src/**/*.ts", "src/**/*.tsx", "__tests__/**/*.ts", "__tests__/**/*.tsx", "vitest.config.ts", "tsconfig.json"],
+      "inputs": ["src/**/*.ts", "src/**/*.tsx", "vitest.config.*", "tsconfig.json"],
       "outputs": ["coverage/**"]
     },
     "coverage": {
       "dependsOn": ["^build"],
-      "inputs": ["src/**/*.ts", "src/**/*.tsx", "__tests__/**/*.ts", "__tests__/**/*.tsx", "vitest.config.ts", "tsconfig.json"],
+      "inputs": ["src/**/*.ts", "src/**/*.tsx", "vitest.config.*", "tsconfig.json"],
       "outputs": ["coverage/**"]
     },
     "dev": {

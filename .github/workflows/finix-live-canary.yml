@@ -1,0 +1,41 @@
+name: Finix live CDN canary
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 10 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: finix-live-cdn-canary
+  cancel-in-progress: true
+
+jobs:
+  canary:
+    name: Finix v2 / Chromium
+    if: ${{ vars.FINIX_SANDBOX_APPLICATION_ID != '' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Install pnpm
+        uses: pnpm/action-setup@d15e628ca66d93ee5f352c71671a7bc6a97af5c9 # v6.0.8
+      - name: Install Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Chromium
+        run: pnpm --filter @kyberry/finix-client-sdk exec playwright install --with-deps chromium
+      - name: Run live Finix CDN canary
+        env:
+          FINIX_SANDBOX_APPLICATION_ID: ${{ vars.FINIX_SANDBOX_APPLICATION_ID }}
+        run: pnpm --filter @kyberry/finix-client-sdk test:live

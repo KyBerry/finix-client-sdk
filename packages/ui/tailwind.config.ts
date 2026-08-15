@@ -1,6 +1,6 @@
 import type { Config } from "tailwindcss"
 import tailwindcssAnimate from "tailwindcss-animate"
-import { fontFamily } from "tailwindcss/defaultTheme"
+import { fontFamily } from "tailwindcss/defaultTheme.js"
 
 const config = {
   darkMode: ["class"],
@@ -12,8 +12,11 @@ const config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-sans)", ...fontFamily.sans],
-        mono: ["var(--font-mono)", ...fontFamily.mono],
+        /* The var() needs an inline fallback: substituting an undefined
+           custom property invalidates the whole font-family declaration,
+           which silently drops the stack after it (Times everywhere). */
+        sans: ["var(--font-sans, ui-sans-serif)", ...fontFamily.sans],
+        mono: ["var(--font-mono, ui-monospace)", ...fontFamily.mono],
       },
       colors: {
         border: "hsl(var(--border))",
