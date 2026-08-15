@@ -1,0 +1,70 @@
+export const metadata = {
+  title: "FinixClient",
+  description: "Create a client and mount the hosted payment form.",
+};
+
+# FinixClient
+
+<p className="lead">The entry point. Holds your environment and application id, and puts the hosted form on the page.</p>
+
+```ts
+import { FinixClient } from "@kyberry/finix-client-sdk";
+
+const client = new FinixClient({ environment: "sandbox", applicationId: "AP_..." });
+```
+
+In React, prefer `useFinixClient(config)` from the React entry; it does the same and keeps the client stable across renders.
+
+## Constructor options
+
+The constructor checks these at runtime and throws `FinixSdkError` code `invalid_configuration` on bad input.
+
+<PropsTable
+  rows={[
+    { name: "environment", type: '"sandbox" | "prod"', description: "Which Finix environment the form talks to." },
+    { name: "applicationId", type: "string", description: "Your Finix application id (starts with AP)." },
+    { name: "formReadyTimeoutMs", type: "number", default: "20000", description: "How long mount() waits for Finix to report the form ready." },
+    { name: "submissionTimeoutMs", type: "number", default: "30000", description: "Default wait for form.submit()." },
+    { name: "script", type: "{ nonce?, timeoutMs? }", description: "Options for loading Finix's script: a CSP nonce and a load timeout (default 15000). The URL is fixed." },
+  ]}
+/>
+
+## `mount(element, options?, asyncOptions?)`
+
+```ts
+const form = await client.mount("payment-form", { paymentMethods: ["card"] });
+```
+
+- `element`: your container, as an element or its id. The SDK adds its own child `div` inside it (`data-finix-payment-form="v2"`) and hands that to Finix, so anything else inside your container is left alone.
+- `options`: everything Finix accepts for its PaymentForm, plus this SDK's callbacks. See [Options](#options).
+- `asyncOptions`: `{ timeoutMs?, signal? }`.
+
+Resolves with a [`PaymentFormInstance`](/docs/reference/payment-form) once Finix says the form is ready. Rejects with:
+
+- `payment_form_unavailable` if Finix did not return a form,
+- `timeout` if the ready timeout passes,
+- `aborted` if your signal fires,
+- `invalid_configuration` if the container does not exist or an option is wrong.
+
+If mounting fails, the SDK removes anything it created and calls `onError` once.
+
+## Options
+
+All of Finix's documented options are passed through as-is: `paymentMethods`, `showAddress`, `hideFields`, `requiredFields`, `defaultValues`, `labels`, `placeholders`, `theme`, `styles`, `fonts`, and so on. Card values are rejected in `defaultValues`.
+
+Callbacks:
+
+<PropsTable
+  rows={[
+    { name: "onChange", type: "({ state, binInformation, hasErrors }) => void", description: "Fires as the user types. hasErrors is the one to watch." },
+    { name: "onSubmitResult", type: "({ ok, token, response, error }) => void", description: "Fires after each tokenization attempt. Providing it also asks Finix to render its own submit button." },
+    { name: "onLoad", type: "() => void", description: "The hosted form finished loading. Usually you just await mount() instead." },
+    { name: "onError", type: "(error: FinixSdkError) => void", description: "Unexpected problems that are not tied to a specific mount() or submit() call." },
+    { name: "onUpdate", type: "(state, binInformation, hasErrors) => void", description: "Same as onChange, in Finix's positional shape." },
+    { name: "onSubmit", type: "(error, response) => void", description: "Same as onSubmitResult, in Finix's positional shape. Exactly one argument is non-null." },
+  ]}
+/>
+
+<Callout>
+  `mount()` loads Finix's script for you. You only need [`loadFinix`](/docs/reference/loader) directly if you want to warm the script early.
+</Callout>

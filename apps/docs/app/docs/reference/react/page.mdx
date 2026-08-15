@@ -1,0 +1,66 @@
+export const metadata = {
+  title: "React",
+  description: "Everything exported from @kyberry/finix-client-sdk/react.",
+};
+
+# React
+
+```ts
+import {
+  FinixPaymentForm,
+  FinixForm,             // { Root, Host, Consumer }
+  useFinixPaymentForm,
+  useFinixPaymentFormContext,
+  useFinixClient,
+  useFinixAppearance,
+} from "@kyberry/finix-client-sdk/react";
+```
+
+Named exports `FinixPaymentFormRoot`, `FinixPaymentFormHost`, and `FinixPaymentFormConsumer` are the same as `FinixForm.Root/Host/Consumer`.
+
+## `FinixPaymentForm`
+
+One tag. Renders the host `div` and, if `children` is a function, your UI right after it.
+
+<PropsTable
+  rows={[
+    { name: "client", type: "FinixClient", description: "The client to mount with." },
+    { name: "options", type: "FinixPaymentFormOptions", default: "{}", description: "Frozen at mount; callbacks stay live." },
+    { name: "children", type: "(form: UseFinixPaymentFormResult) => ReactNode", description: "Optional render prop for your button and status." },
+    { name: "instanceKey", type: "string | number", description: "Change it to destroy and recreate the hosted form." },
+    { name: "onReady", type: "(form: PaymentFormInstance) => void", description: "Called once the form is mounted." },
+    { name: "...div props", type: "HTMLAttributes<HTMLDivElement>", description: "className, style, ARIA, data-* go on the host div. Static children are not allowed." },
+  ]}
+/>
+
+## `FinixForm.Root`
+
+Creates the controller and renders no DOM. Props: `client`, `options`, `onReady`, `instanceKey`, `children`. Throws `invalid_configuration` if `instanceKey` is not a string or finite number, or if two `Host`s attach.
+
+## `FinixForm.Host`
+
+The `div` Finix fills. Accepts div props and a ref; not children. Sets `data-finix-status`, `data-finix-valid`, `data-finix-submitting`, `data-finix-error`, and `aria-busy` while loading or submitting.
+
+## `FinixForm.Consumer`
+
+`{ children: (form: UseFinixPaymentFormResult) => ReactNode }`.
+
+## `useFinixPaymentForm({ client, options?, onReady?, instanceKey? })`
+
+The hook under all of the above. Returns the controller (fields listed on [React primitives](/docs/guides/react)). Attach `result.ref` to the `div` you want Finix to fill.
+
+## `useFinixPaymentFormContext()`
+
+The nearest `Root`'s controller. Throws `invalid_configuration` outside a `Root`.
+
+## `useFinixClient(config)`
+
+`(config: FinixClientConfig) => FinixClient`. Builds the client once and rebuilds only when a config value changes.
+
+## `useFinixAppearance(appearance, scheme, extraKey?)`
+
+`(appearance: FinixHostedAppearance, scheme: "light" | "dark", extraKey?: string | number) => { appearance, instanceKey }`. The flattened appearance for `scheme` (see `resolveFinixAppearance`) and an `instanceKey` that changes with it. Pass `extraKey` if you also recreate the form for other reasons; it is folded into the key.
+
+## Types
+
+`FinixPaymentFormStatus` is `"idle" | "loading" | "ready" | "error"`. `UseFinixPaymentFormOptions`, `UseFinixPaymentFormResult`, `UseFinixAppearanceResult`, and the `*Props` types are exported.

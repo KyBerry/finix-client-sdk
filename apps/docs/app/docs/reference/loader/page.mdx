@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "loadFinix",
+  description: "Load Finix.js once, optionally early.",
+};
+
+# loadFinix
+
+<p className="lead">Loads Finix's script and resolves with the global `Finix` object. `client.mount()` calls this for you; use it directly only to warm the script before the user reaches checkout.</p>
+
+```ts
+import { loadFinix, FINIX_SCRIPT_URL } from "@kyberry/finix-client-sdk";
+
+await loadFinix({ nonce, timeoutMs: 15_000 });
+```
+
+`FINIX_SCRIPT_URL` is `https://js.finix.com/v/2/finix.js`. Finix requires loading from that origin, so there is no option to change it.
+
+## Options
+
+<PropsTable
+  rows={[
+    { name: "nonce", type: "string", description: "CSP nonce to put on the injected script tag." },
+    { name: "timeoutMs", type: "number", default: "15000", description: "Reject with code timeout if the script has not loaded." },
+    { name: "signal", type: "AbortSignal", description: "Reject with code aborted." },
+  ]}
+/>
+
+## Behavior
+
+- Call it as often as you like; the script loads once and every call shares the same Promise.
+- If a different Finix.js version is already on the page, it rejects with `script_conflict`.
+- If loading fails, it rejects with `script_load_failed` and forgets the attempt, so the next call retries.
+- On the server (no `window`), it rejects with `not_browser`.

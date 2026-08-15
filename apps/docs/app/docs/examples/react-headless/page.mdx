@@ -1,0 +1,20 @@
+export const metadata = {
+  title: "React headless",
+  description: "Root, Host, and Consumer, for when the button lives somewhere else.",
+};
+
+# React headless
+
+<p className="lead">`FinixForm.Root` holds the state, `FinixForm.Host` is the one `div` Finix fills, and `FinixForm.Consumer` gives you the state wherever you need it. Everything around the fields is your markup.</p>
+
+<LiveExample id="react-headless" />
+
+This example turns on `showAddress`, so the hosted form also renders address fields. Test cards work; nothing is charged.
+
+What to notice in the code:
+
+- The button is a sibling of the host, inside your own frame. It could be anywhere under `Root`.
+- `form.canSubmit` gates the button. `form.submit()` resolves with `{ token }`.
+- Nothing is styled by the SDK. The frame, button, and telemetry strip are the docs site's own components.
+
+Use this shape when the form and its controls are not next to each other, or when several parts of the page need the form's state (`useFinixPaymentFormContext()` works anywhere under `Root`).

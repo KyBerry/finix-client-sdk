@@ -1,0 +1,21 @@
+export const metadata = {
+  title: "Themed appearance",
+  description: "Style the hosted fields, with light and dark from one appearance object.",
+};
+
+# Themed appearance
+
+<p className="lead">One appearance object with a `default` (light) look and a `dark` layer that lists only what changes. `useFinixAppearance` flattens it for whichever theme the site is showing.</p>
+
+<LiveExample id="themed-appearance" />
+
+Flip the site theme with the toggle in the top bar and the fields follow. Test cards work here too; nothing is charged.
+
+What to notice in the code:
+
+- `defineFinixStyles({ input, form })` with no mode key is treated as the light look.
+- `mergeFinixStyles(shape, colors)` layers a shared shape (radius, padding, font) under per-scheme colors, so you never repeat the geometry.
+- `useFinixAppearance(brand, scheme)` returns the flattened appearance and an `instanceKey`. Because options are frozen at mount, that key is what actually swaps the form when the theme changes.
+- The dark result sets `enableDarkMode: true` so Finix's own dark rules apply too, such as the country select's chevron, which Finix draws from a stylesheet.
+
+Everything you send is a resolved value. CSS variables from this page cannot cross into the iframe.

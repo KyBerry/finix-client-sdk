@@ -1,0 +1,29 @@
+export const metadata = {
+  title: "Error codes",
+  description: "Every FinixSdkError code, where it comes from, and what to do.",
+};
+
+# Error codes
+
+```ts
+import { FinixSdkError, FINIX_SDK_ERROR_CODES, type FinixSdkErrorCode } from "@kyberry/finix-client-sdk";
+```
+
+`FinixSdkError` extends `Error` and adds `code` (one of the values below), optional `details` (Finix's raw payload when there is one), and the standard `cause`. `FinixSdkError.from(error, code, fallbackMessage)` wraps anything into one.
+
+| Code | Comes from | What it means | What to do |
+| --- | --- | --- | --- |
+| `invalid_configuration` | constructor, `mount`, React | Bad config, missing container, wrong option, wrong React composition. | Fix the code; this is a programming error. |
+| `tokenization_failed` | `submit`, `onSubmitResult` | Finix rejected the card details. | Show `error.message`; the user can try again. |
+| `timeout` | `mount`, `submit`, `loadFinix` | The wait time passed. | Retry, or raise the timeout. |
+| `aborted` | `mount`, `submit`, `loadFinix` | Your `AbortSignal` fired. | Nothing; you asked for it. |
+| `submission_in_progress` | `submit` | A submit was already running. | Disable your button while `isSubmitting`. |
+| `destroyed` | `submit` | The form was destroyed. | Mount a new form. |
+| `payment_form_unavailable` | `mount`, `submit` | Finix did not return a form, or it is not ready. | Check the application id and environment; retry. |
+| `script_load_failed` | `loadFinix` | The script could not be downloaded. | Network or CSP problem; the next call retries. |
+| `script_conflict` | `loadFinix` | Another Finix.js version is already on the page. | Remove the other script tag. |
+| `finix_unavailable` | `loadFinix` | The script loaded but `window.Finix` is missing. | Likely a CSP or extension blocking it. |
+| `not_browser` | `loadFinix`, `mount` | Called without `window`. | Only mount in the browser. |
+| `invalid_response` | `submit`, callbacks | Finix sent a payload the SDK could not validate. | Report it; `details` has the shape. |
+| `callback_error` | any callback you wrote | Your callback threw. Delivered through `onError`. | Fix the callback. |
+| `auth_unavailable` | `createFinixAuth` | `Finix.Auth` is missing or failed. | Check the merchant id and environment. |

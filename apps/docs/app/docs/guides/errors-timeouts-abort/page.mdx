@@ -1,0 +1,66 @@
+export const metadata = {
+  title: "Errors, timeouts & abort",
+  description: "One error type, where errors show up, how long things wait, and how to cancel.",
+};
+
+# Errors, timeouts & abort
+
+<p className="lead">Every failure is a `FinixSdkError` with a stable `code` you can switch on. Nothing fails silently.</p>
+
+```ts
+import { FinixSdkError } from "@kyberry/finix-client-sdk";
+
+try {
+  const { token } = await form.submit();
+} catch (error) {
+  if (error instanceof FinixSdkError) {
+    error.code;    // e.g. "tokenization_failed"
+    error.message; // human-readable
+    error.details; // Finix's raw payload, when there is one
+  }
+}
+```
+
+## Where errors show up
+
+| You did | Errors arrive as |
+| --- | --- |
+| `await client.mount(...)` | The Promise rejects. |
+| `await form.submit()` | The Promise rejects. |
+| Passed `onSubmitResult` / `onSubmit` | Your callback receives `{ ok: false, error }` (or `(error, null)`). |
+| Passed `onError` | Anything else that goes wrong later: a callback you wrote threw, Finix sent a malformed payload, cleanup failed. |
+| React | `error` for mount problems, `submissionError` for the last failed submit. |
+
+`onError` is for the unexpected. It does not replace `try`/`catch` around `mount()` and `submit()`.
+
+## Timeouts
+
+Nothing waits forever. Defaults, all overridable:
+
+| What | Default | Where to change it |
+| --- | --- | --- |
+| Loading Finix's script | 15 s | `new FinixClient({ script: { timeoutMs } })` |
+| Form becoming ready after `mount()` | 20 s | `formReadyTimeoutMs` on the client, or `mount(el, options, { timeoutMs })` |
+| `submit()` | 30 s | `submissionTimeoutMs` on the client, or `submit({ timeoutMs })` |
+
+A timed-out call rejects with code `timeout`. A timed-out mount also cleans up anything it created.
+
+## Cancel with AbortSignal
+
+Both `mount()` and `submit()` accept `{ signal }`. Cancelled calls reject with code `aborted`.
+
+```ts
+const controller = new AbortController();
+const pending = client.mount(host, options, { signal: controller.signal });
+controller.abort();
+```
+
+The React hook aborts the mount for you if the component unmounts.
+
+## Rules that protect you
+
+- Calling `submit()` while one is already running rejects with `submission_in_progress`.
+- After `form.destroy()`, `submit()` rejects with `destroyed`, and any in-flight submit is rejected too.
+- If a different Finix.js version is already on the page, loading rejects with `script_conflict`. If a load fails, the next call tries again.
+
+Every code is listed on [Error codes](/docs/reference/errors).

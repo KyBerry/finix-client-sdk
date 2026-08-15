@@ -1,0 +1,45 @@
+export const metadata = {
+  title: "Auth sessions",
+  description: "Turn on Finix fraud-session tracking and send the session key with your token.",
+};
+
+# Auth sessions
+
+<p className="lead">Finix can score a checkout for fraud if you start a `Finix.Auth` session first and send its key to your server along with the token.</p>
+
+<Steps>
+  <Step title="Start the session before you mount the form">
+
+```ts
+import { createFinixAuth } from "@kyberry/finix-client-sdk";
+
+const auth = await createFinixAuth({
+  environment: "sandbox",
+  merchantId: "MU_...",
+});
+```
+  </Step>
+  <Step title="Send the session key with the token">
+
+```ts
+const { token } = await form.submit();
+
+await fetch("/api/payment-instruments", {
+  method: "POST",
+  headers: { "content-type": "application/json" },
+  body: JSON.stringify({ token, fraudSessionId: auth.getSessionKey() }),
+});
+```
+  </Step>
+  <Step title="Your server passes it to Finix">
+    When your backend creates the Authorization or Transfer, include the value as `fraud_session_id`.
+  </Step>
+</Steps>
+
+Selling on behalf of several merchants? Call `await auth.connect(nextMerchantId)` to start a new session for the next one.
+
+<Callout>
+  Payment forms use `sandbox | prod`. Auth uses Finix's separate `sandbox | live` names. Both are checked at runtime.
+</Callout>
+
+Finix's own docs: [Finix.Auth reference](https://docs.finix.com/js/auth) and [fraud detection guide](https://docs.finix.com/guides/online-payments/fraud-and-risk/fraud-detection). API details: [Auth reference](/docs/reference/auth).

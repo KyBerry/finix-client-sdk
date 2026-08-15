@@ -1,0 +1,61 @@
+export const metadata = {
+  title: "Installation",
+  description: "Install the package and learn what it does for you.",
+};
+
+# Installation
+
+<p className="lead">Install one package. It loads Finix's script, puts the hosted card form on your page, and hands you a token when the user submits.</p>
+
+<Tabs defaultSelectedKey="pnpm">
+  <TabsList>
+    <TabsTrigger id="pnpm">pnpm</TabsTrigger>
+    <TabsTrigger id="npm">npm</TabsTrigger>
+    <TabsTrigger id="yarn">yarn</TabsTrigger>
+  </TabsList>
+  <TabsContent id="pnpm">
+```bash
+pnpm add @kyberry/finix-client-sdk
+```
+  </TabsContent>
+  <TabsContent id="npm">
+```bash
+npm install @kyberry/finix-client-sdk
+```
+  </TabsContent>
+  <TabsContent id="yarn">
+```bash
+yarn add @kyberry/finix-client-sdk
+```
+  </TabsContent>
+</Tabs>
+
+## What you need
+
+- A Finix **application id** (starts with `AP`). Get it from your Finix dashboard. Use a sandbox one while you build.
+- Node 20 or newer for your build tooling.
+- React 18.2 or newer, but only if you use the React entry (`@kyberry/finix-client-sdk/react`). The core entry has no React dependency.
+
+## How it works in one paragraph
+
+Finix hosts the actual card inputs inside an iframe served from `js.finix.com`. Your page never sees the card number. When the user submits, Finix turns what they typed into a **token** (a string starting with `TK`). You send that token to your own server, and your server uses it with the Finix API to create a payment instrument. This package makes that flow typed, predictable, and easy to wire up.
+
+## What the package gives you
+
+- One line to load Finix's script (and it only loads once, even if you call it many times).
+- `FinixClient.mount()` to place the form, returning a Promise that resolves when the form is ready.
+- `form.submit()` to get the token, with timeouts, cancellation, and one error type for every failure.
+- Helpers to style the hosted fields with resolved colors and fonts, and to switch between light and dark.
+- React: a one-tag component for simple pages, and headless pieces (`Root`, `Host`, `Consumer`) when you want full control of the layout.
+- `createFinixAuth` for Finix's fraud-session tracking.
+
+## What it does not do
+
+- It does not bundle or mirror Finix's script. Finix requires it to load from `js.finix.com`, so that is where it loads from.
+- It does not make you PCI compliant on its own. It keeps card data out of your page, which is the biggest step, but review Finix's docs and your own requirements before going live.
+
+<Callout variant="warning" title="Unofficial package">
+  This is an independent, open-source project. It is not maintained, endorsed, or certified by Finix.
+</Callout>
+
+Next: [Quick start](/docs/getting-started/quick-start).

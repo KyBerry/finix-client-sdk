@@ -1,0 +1,145 @@
+export const metadata = {
+  title: "Quick start",
+  description: "Put the hosted form on a page and get a token, in React or plain JavaScript.",
+};
+
+# Quick start
+
+<p className="lead">Two paths, same result: the hosted form appears on your page and your button gets a token.</p>
+
+Pick the tab that matches your app.
+
+<Tabs defaultSelectedKey="react">
+  <TabsList>
+    <TabsTrigger id="react">React</TabsTrigger>
+    <TabsTrigger id="browser">Plain JavaScript</TabsTrigger>
+  </TabsList>
+  <TabsContent id="react">
+
+<Steps>
+  <Step title="Create a client">
+    `useFinixClient` builds a `FinixClient` once and keeps it stable across renders. Do this in a client component; the hosted form needs the browser.
+
+```tsx title="payment-form.tsx"
+"use client";
+
+import { FinixPaymentForm, useFinixClient } from "@kyberry/finix-client-sdk/react";
+
+export function PaymentForm() {
+  const client = useFinixClient({
+    environment: "sandbox",
+    applicationId: process.env.NEXT_PUBLIC_FINIX_APPLICATION_ID!,
+  });
+```
+  </Step>
+  <Step title="Render the form and your button">
+    `FinixPaymentForm` renders a `div` that Finix fills with the hosted fields. Pass a function as children and you get the form's state and actions to build your own button.
+
+```tsx
+  return (
+    <FinixPaymentForm client={client} options={{ paymentMethods: ["card"], showAddress: true }}>
+      {(form) => (
+        <button
+          type="button"
+          disabled={!form.canSubmit}
+          onClick={() => {
+            form.submit().then(async ({ token }) => {
+              await fetch("/api/payment-instruments", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ token }),
+              });
+            });
+          }}
+        >
+          {form.isSubmitting ? "Saving…" : "Save payment method"}
+        </button>
+      )}
+    </FinixPaymentForm>
+  );
+}
+```
+  </Step>
+  <Step title="That's it">
+    `form.canSubmit` is true once the form is loaded, the fields are valid, and nothing is in flight. `form.submit()` resolves with `{ token }`. If it fails, `form.submissionError` holds the reason and the Promise rejects, so add a `.catch` if you want to show a message.
+  </Step>
+</Steps>
+
+Want to place the button somewhere else in your layout, or read the state from a hook? See [React primitives](/docs/guides/react).
+
+  </TabsContent>
+  <TabsContent id="browser">
+
+<Steps>
+  <Step title="Add a container and a button">
+
+```html
+<div id="payment-form"></div>
+<button id="submit" type="button" disabled>Save payment method</button>
+```
+  </Step>
+  <Step title="Mount the form">
+    `client.mount()` loads Finix's script, fills your container with the hosted fields, and resolves once the form is ready. `onChange` fires as the user types; use `hasErrors` to enable your button.
+
+```ts title="checkout.ts"
+import { FinixClient } from "@kyberry/finix-client-sdk";
+
+const client = new FinixClient({ environment: "sandbox", applicationId: "AP_..." });
+const button = document.querySelector<HTMLButtonElement>("#submit")!;
+
+const form = await client.mount("payment-form", {
+  paymentMethods: ["card"],
+  showAddress: true,
+  onChange: ({ hasErrors }) => {
+    button.disabled = hasErrors;
+  },
+});
+```
+  </Step>
+  <Step title="Submit and send the token to your server">
+
+```ts
+button.addEventListener("click", async () => {
+  try {
+    const { token } = await form.submit();
+    await fetch("/api/payment-instruments", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+  } catch (error) {
+    // error is a FinixSdkError; error.code tells you what went wrong
+  }
+});
+
+// When you leave the page:
+form.destroy();
+```
+  </Step>
+</Steps>
+
+  </TabsContent>
+</Tabs>
+
+## Let Finix draw the button instead
+
+If you would rather not build a button, pass `onSubmitResult` (or Finix's positional `onSubmit`) and Finix renders its own submit button inside the form. Your callback gets the result.
+
+```ts
+const form = await client.mount("payment-form", {
+  submitLabel: "Save payment method",
+  onSubmitResult: (result) => {
+    if (!result.ok) {
+      console.error(result.error.code, result.error.message);
+      return;
+    }
+    void sendToServer(result.token);
+  },
+});
+```
+
+<Callout>
+  Pick one: your own button calling `form.submit()`, or Finix's button with `onSubmitResult`. Not both.
+</Callout>
+
+Next: [Tokenization flow](/docs/getting-started/tokenization-flow), a short read on what actually happens and where the security boundary is.

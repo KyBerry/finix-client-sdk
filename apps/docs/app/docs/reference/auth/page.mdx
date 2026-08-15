@@ -1,0 +1,36 @@
+export const metadata = {
+  title: "Auth",
+  description: "createFinixAuth and FinixAuthSession for fraud-session tracking.",
+};
+
+# Auth
+
+```ts
+import { createFinixAuth, FinixAuthSession, FINIX_AUTH_ENVIRONMENTS } from "@kyberry/finix-client-sdk";
+```
+
+## `createFinixAuth(config, options?)`
+
+```ts
+const auth = await createFinixAuth({ environment: "sandbox", merchantId: "MU_..." });
+```
+
+Loads Finix's script, starts a `Finix.Auth` session, and resolves with a `FinixAuthSession`.
+
+<PropsTable
+  rows={[
+    { name: "environment", type: '"sandbox" | "live"', description: "Auth uses Finix's sandbox | live names (not sandbox | prod)." },
+    { name: "merchantId", type: "string", description: "The seller's Finix merchant id." },
+    { name: "readyTimeoutMs", type: "number", default: "20000", description: "How long to wait for the first session key." },
+    { name: "script", type: "{ nonce?, timeoutMs? }", description: "Script loading options, same as FinixClient." },
+  ]}
+/>
+
+`options` is `{ timeoutMs?, signal? }` for this one call. Rejects with `auth_unavailable` if `Finix.Auth` is missing or fails, `invalid_configuration` for bad input, `timeout`, or `aborted`.
+
+## `FinixAuthSession`
+
+- `getSessionKey(): string`. The current session key. Send it to your server as `fraud_session_id`.
+- `connect(merchantId, options?): Promise<string>`. Start a new session for a different seller; resolves with the new key.
+
+See the [Auth sessions](/docs/guides/auth) guide.

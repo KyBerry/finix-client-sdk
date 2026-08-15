@@ -1,0 +1,99 @@
+export const metadata = {
+  title: "Appearance & theming",
+  description: "Make the hosted fields match your design, including light and dark mode.",
+};
+
+# Appearance & theming
+
+<p className="lead">The card fields live inside Finix's iframe, so your CSS cannot reach them. Instead you send Finix a plain object of resolved values: colors, fonts, spacing, radius.</p>
+
+Everything around the fields (your labels, buttons, errors, layout) is normal HTML and CSS. Only the fields inside the iframe use the styles described here.
+
+## The shape of a style object
+
+You style five targets: `form`, `input`, `sectionHeader`, `section`, and `submitButton`. Each target has states like `default`, `focused`, and `error`. Values are plain CSS properties. See Finix's [Styles & Fonts reference](https://docs.finix.com/js/styles-and-fonts) for the full list.
+
+```ts
+import { defineFinixStyles } from "@kyberry/finix-client-sdk";
+
+const styles = defineFinixStyles({
+  input: {
+    default: { border: "1px solid #cbd5e1", borderRadius: 10, padding: "12px 14px" },
+    focused: { borderColor: "#2563eb" },
+    error: { borderColor: "#dc2626" },
+  },
+});
+```
+
+`defineFinixStyles` checks the object at definition time so mistakes show up where you wrote them, and keeps your literal values for autocomplete. A bare `{ input, form, ... }` object like the one above is treated as the light (default) look. Use `{ default: {...}, dark: {...} }` when you want both.
+
+## Put it all in one appearance object
+
+`defineFinixHostedAppearance` bundles styles with labels, placeholders, and fonts. Spread it into your mount options.
+
+```ts
+import { defineFinixHostedAppearance, mergeFinixStyles } from "@kyberry/finix-client-sdk";
+
+const appearance = defineFinixHostedAppearance({
+  labels: { card_holder_name: "Name on card" },
+  styles: mergeFinixStyles(styles, {
+    dark: {
+      input: { default: { backgroundColor: "#0f172a", color: "#f8fafc" } },
+    },
+  }),
+});
+
+await client.mount("payment-form", { paymentMethods: ["card"], ...appearance });
+```
+
+`mergeFinixStyles` combines layers property by property, in order. A later layer can change one color without erasing the rest.
+
+## Light and dark that follow your app
+
+Finix applies `styles.dark` only when the **iframe's** `prefers-color-scheme` is dark. That means it follows the operating system, not your in-app theme toggle. To make the fields follow your app instead, flatten the appearance for the scheme you are showing:
+
+```ts
+import { resolveFinixAppearance } from "@kyberry/finix-client-sdk";
+
+const forDark = resolveFinixAppearance(appearance, "dark");
+// forDark.styles has one mode: default merged with dark
+// forDark.enableDarkMode is true
+```
+
+In React, `useFinixAppearance` does this and also gives you an `instanceKey`, so the hosted form is recreated when the theme flips:
+
+```tsx
+import { FinixPaymentForm, useFinixAppearance } from "@kyberry/finix-client-sdk/react";
+
+const { appearance: resolved, instanceKey } = useFinixAppearance(appearance, isDark ? "dark" : "light");
+
+<FinixPaymentForm client={client} options={{ paymentMethods: ["card"], ...resolved }} instanceKey={instanceKey} />
+```
+
+## Map your design tokens
+
+If your app already has a theme object, write an adapter once and reuse it:
+
+```ts
+import { defineFinixHostedAppearanceAdapter } from "@kyberry/finix-client-sdk";
+
+interface AppTheme { fieldBackground: string; fieldText: string; focusRing: string }
+
+const fromTheme = defineFinixHostedAppearanceAdapter<AppTheme>()((theme) => ({
+  styles: {
+    input: {
+      default: { backgroundColor: theme.fieldBackground, color: theme.fieldText },
+      focused: { boxShadow: `0 0 0 3px ${theme.focusRing}` },
+    },
+  },
+}));
+
+const appearance = fromTheme({ fieldBackground: "#fff", fieldText: "#0f172a", focusRing: "rgba(37,99,235,.2)" });
+```
+
+## Two things to know
+
+- **Options are frozen at mount.** Changing the appearance object later does nothing to the form that is already on the page (recreating it would wipe what the user typed). To apply a new appearance on purpose, change `instanceKey`. In development the SDK warns you if it sees changed options without a new key.
+- **Placeholder color** is the browser default inside the hosted fields. Finix exposes no hook for it.
+
+See the live [Themed appearance](/docs/examples/themed-appearance) example and the [Appearance helpers](/docs/reference/appearance) reference.

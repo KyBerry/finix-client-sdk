@@ -1,0 +1,61 @@
+export const metadata = {
+  title: "Appearance helpers",
+  description: "Functions that define, merge, and resolve styles for the hosted fields.",
+};
+
+# Appearance helpers
+
+<p className="lead">All optional. They validate early, keep your literal types, and take the repetition out of theming. You can always pass a plain object instead.</p>
+
+## `defineFinixStyles(styles)`
+
+Returns a checked, typed style object. Accepts either shape:
+
+```ts
+defineFinixStyles({ input: { default: { padding: "12px" } } });
+// → { default: { input: { default: { padding: "12px" } } } }
+
+defineFinixStyles({ default: {...}, dark: {...} });
+// → unchanged
+```
+
+Targets: `form`, `input`, `sectionHeader`, `section`, `submitButton`. States per Finix's reference (`default`, `focused`, `error`, `success`, `disabled`).
+
+## `mergeFinixStyles(...layers)`
+
+Deep-merges style layers in order, down to individual CSS properties. Later layers win. Accepts either shape from above.
+
+```ts
+mergeFinixStyles(
+  { input: { default: { border: "1px solid #ccc", padding: "12px" } } },
+  { input: { default: { border: "1px solid #000" } } },
+);
+// → default.input.default = { border: "1px solid #000", padding: "12px" }
+```
+
+## `defineFinixHostedAppearance(appearance)`
+
+Returns a checked `FinixHostedAppearance`: labels, placeholders, error messages, `theme`, `enableDarkMode`, `styles`, `fonts`. Rejects structural options (like `paymentMethods`) and callbacks, so an appearance stays reusable.
+
+## `resolveFinixAppearance(appearance, "light" | "dark")`
+
+Flattens an appearance for the scheme your app is showing. For `"dark"`, `styles.dark` is merged over `styles.default` and `enableDarkMode` is set to `true`; for `"light"`, `styles.dark` is dropped and `enableDarkMode` is `false`. Use it when your app has its own theme toggle, since Finix only reads the OS scheme. The React entry wraps this as `useFinixAppearance`.
+
+## `defineFinixHostedAppearanceAdapter<Theme>()(fn)`
+
+Turns your theme object into an appearance. Curried so you name `Theme` and the appearance type is inferred.
+
+```ts
+const fromTheme = defineFinixHostedAppearanceAdapter<AppTheme>()((theme) => ({ styles: {...} }));
+const appearance = fromTheme(currentTheme);
+```
+
+## `defineFinixPaymentFormOptions(options)`
+
+Checks and returns a full `FinixPaymentFormOptions` object for reuse across mounts.
+
+## `normalizeFinixStyles(styles)`
+
+The bare-to-moded conversion on its own, without validation. Used by the helpers above.
+
+See the [Appearance & theming](/docs/guides/appearance) guide.

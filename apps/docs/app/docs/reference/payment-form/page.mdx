@@ -1,0 +1,44 @@
+export const metadata = {
+  title: "PaymentFormInstance",
+  description: "What you get back from mount(): submit, destroy, and the current state.",
+};
+
+# PaymentFormInstance
+
+<p className="lead">Returned by [`client.mount()`](/docs/reference/client). You never construct it yourself.</p>
+
+## `submit(options?)`
+
+```ts
+const result = await form.submit({ timeoutMs: 15_000 });
+result.token; // "TK..."
+```
+
+Asks Finix to tokenize what the user typed. Resolves with a `FinixSubmitResponse`: the validated Finix response with `token` added at the top level (same as `data.id`). Rejects with a `FinixSdkError`:
+
+- `tokenization_failed`: Finix said no. `error.details` has Finix's payload.
+- `submission_in_progress`: you called submit while one was running.
+- `destroyed`: the form was destroyed.
+- `invalid_response`: Finix returned something unexpected.
+- `timeout` / `aborted`: from `options`.
+
+If you also passed `onSubmitResult` or `onSubmit` at mount, they are called with the same result.
+
+## `destroy()`
+
+```ts
+form.destroy();
+```
+
+Removes the hosted form and the SDK's mount `div`. Safe to call more than once. Any in-flight submit is rejected with `destroyed`. The React components call this for you on unmount.
+
+## Properties
+
+<PropsTable
+  rows={[
+    { name: "hasErrors", type: "boolean", default: "true", description: "Finix's validation flag from the latest change. Starts true." },
+    { name: "state", type: "FinixFormState", default: "{}", description: "Per-field flags: errors, isDirty, isFocused, errorMessages, selected. Never card values." },
+    { name: "binInformation", type: "FinixBinInformation", default: "{}", description: "bin and cardBrand once Finix knows them." },
+    { name: "destroyed", type: "boolean", default: "false", description: "True after destroy()." },
+  ]}
+/>

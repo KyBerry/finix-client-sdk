@@ -1,0 +1,18 @@
+export const metadata = {
+  title: "Basic card form",
+  description: "The simplest React integration: one component, one button, one token.",
+};
+
+# Basic card form
+
+<p className="lead">One `FinixPaymentForm` tag renders the hosted fields. The function you pass as children gets the form's state, so the button knows when it can submit.</p>
+
+<LiveExample id="basic-card" />
+
+Try it with a Finix sandbox test card such as `4111 1111 1111 1111`, any future expiry, and any CVC. Nothing is charged. When you submit, the token in the telemetry strip is `result.token`; in a real app you would POST it to your server and create a Payment Instrument there.
+
+What to notice in the code:
+
+- `useFinixClient` builds the client once.
+- `useSiteAppearance` (defined in the example shell) returns the docs site's styles for the current theme via `useFinixAppearance`, plus an `instanceKey` so the form is recreated when you flip the theme.
+- `form.canSubmit`, `form.isSubmitting`, and `form.submissionError` come from the render prop; there is no state to manage yourself.

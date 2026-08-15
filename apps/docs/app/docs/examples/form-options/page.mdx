@@ -1,0 +1,24 @@
+export const metadata = {
+  title: "Payment methods & address",
+  description: "Card, bank, or both, with or without address fields, and what changing options at runtime really means.",
+};
+
+# Payment methods & address
+
+<p className="lead">`paymentMethods` picks which hosted form Finix renders: card, bank account, or a form with a switcher for both. `showAddress` adds billing address fields. Try the controls above the form.</p>
+
+<LiveExample id="form-options" />
+
+For card, use a sandbox test number like `4111 1111 1111 1111`. The bank form opens with Finix's Plaid Link picker; click **Enter details manually** under it to type a routing and account number instead. Nothing is charged.
+
+What to notice in the code:
+
+- `paymentMethods` is `["card"]`, `["bank"]`, or `["card", "bank"]` (that order). The type only allows those three.
+- **Changing these options recreates the form.** Options are frozen when the hosted form is created, so the example builds an `instanceKey` from the current choices. A new key destroys the old form and mounts a new one, which also clears anything the user typed. That is why real checkouts usually decide these up front rather than mid-entry.
+- If you change options *without* a new `instanceKey`, nothing happens to the form on the page. In development the SDK logs a warning so you notice.
+
+<Callout>
+  The bank picker is Plaid's own embedded Link app in a nested iframe. Neither Finix's `plaidLinkSettings` (`displayName`, `language`, `countries`) nor your styles can theme it, so it stays light even in dark mode. Everything Finix renders around it follows your appearance, and the manual-entry fields are fully themed.
+</Callout>
+
+Other structure options work the same way: `hideFields`, `requiredFields`, `defaultValues` (never card values), `requireSecurityCode`, and `confirmAccountNumber` for bank forms. See [FinixClient options](/docs/reference/client#options).

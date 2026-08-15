@@ -1,0 +1,48 @@
+export const metadata = {
+  title: "Tokenization flow",
+  description: "What happens between the iframe, the token, and your server, and why your page never sees a card number.",
+};
+
+# Tokenization flow
+
+<p className="lead">The whole point of this design: card numbers exist only inside Finix's iframe. Your page and your server only ever see a token.</p>
+
+```text
+Your page (your markup, this SDK, your CSP)
+└── One iframe from https://js.finix.com
+    ├── The card inputs, rendered by Finix
+    └── A POST from inside the iframe to Finix that turns the input into a token
+```
+
+<Steps>
+  <Step title="Mount">
+    `client.mount()` loads Finix's script, adds a small mount `div` inside your container, and asks Finix to render its iframe there. It resolves when Finix says the form is ready.
+  </Step>
+  <Step title="The user types">
+    Finix reports each change to you (`onChange` in this SDK, `onUpdate` in Finix's own API). You get which fields have errors and whether the form as a whole is valid (`hasErrors`). You never get the values of the card fields.
+  </Step>
+  <Step title="Submit">
+    `form.submit()` asks Finix to tokenize inside the iframe. The Promise resolves with `{ token, data, ... }`. The token is a string starting with `TK`.
+  </Step>
+  <Step title="Your server claims the token">
+    Send the token to your backend right away. Your backend calls the Finix API with its own credentials to create a Payment Instrument. Tokens are short-lived; use them promptly and respect `data.expires_at` when it is present.
+  </Step>
+</Steps>
+
+## What `submit()` gives you
+
+```ts
+const result = await form.submit();
+
+result.token;               // "TK..." (same as result.data.id)
+result.data.instrument_type; // e.g. "PAYMENT_CARD" (optional)
+result.data.expires_at;      // ISO timestamp (optional)
+```
+
+<Callout variant="warning" title="Keep secrets on the server">
+  Your Finix API credentials belong on your server, never in browser code. Do not log raw callback payloads in production.
+</Callout>
+
+## Fraud sessions
+
+If you use `Finix.Auth`, start it before the form and send its session key to your server with the token. Your server passes it as `fraud_session_id`. See [Auth sessions](/docs/guides/auth).

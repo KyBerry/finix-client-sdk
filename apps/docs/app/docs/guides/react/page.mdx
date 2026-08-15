@@ -1,0 +1,108 @@
+export const metadata = {
+  title: "React primitives",
+  description: "The one-tag component, the headless pieces, the hook, and how they fit together.",
+};
+
+# React primitives
+
+<p className="lead">Import from `@kyberry/finix-client-sdk/react`. Everything is unstyled: you own the layout, Finix owns one iframe.</p>
+
+## Which one should I use?
+
+- **`FinixPaymentForm`** when the form and your button sit next to each other. One tag, and a render prop for your button and status.
+- **`FinixForm.Root` / `Host` / `Consumer`** when the button or status lives somewhere else in your tree, or several parts of the page need the form's state.
+- **`useFinixPaymentForm`** when you want the raw hook and will attach the ref yourself.
+
+They all share the same controller object, described below.
+
+## `FinixPaymentForm`
+
+Renders one `div` that Finix fills. Pass a function as children to get the controller.
+
+```tsx
+<FinixPaymentForm client={client} options={{ paymentMethods: ["card"] }} className="my-fields">
+  {(form) => (
+    <>
+      <button disabled={!form.canSubmit} onClick={() => form.submit().then(({ token }) => save(token))}>
+        Save card
+      </button>
+      {form.submissionError && <p role="alert">{form.submissionError.message}</p>}
+    </>
+  )}
+</FinixPaymentForm>
+```
+
+`className`, `style`, ARIA and `data-*` props go on the `div`. Your children render right after it.
+
+## `FinixForm.Root`, `Host`, `Consumer`
+
+- `Root` creates the controller and renders nothing.
+- `Host` is the `div` Finix fills. Exactly one per `Root`, always self-closing (Finix owns what is inside).
+- `Consumer` gives you the controller through a render prop. Or call `useFinixPaymentFormContext()` anywhere under `Root`.
+
+```tsx
+<FinixForm.Root client={client} options={{ paymentMethods: ["card"] }}>
+  <section>
+    <h2>Payment</h2>
+    <FinixForm.Host aria-label="Secure payment fields" />
+  </section>
+  <footer>
+    <FinixForm.Consumer>
+      {(form) => <button disabled={!form.canSubmit} onClick={() => form.submit()}>Pay</button>}
+    </FinixForm.Consumer>
+  </footer>
+</FinixForm.Root>
+```
+
+The host `div` also gets `data-finix-status`, `data-finix-valid`, `data-finix-submitting`, and `data-finix-error`, so you can style it from CSS without reading state:
+
+```css
+[data-finix-status="loading"] { opacity: 0.6; }
+[data-finix-valid="true"] { outline: 1px solid #16a34a; }
+```
+
+## The controller
+
+Whichever way you get it, the controller has:
+
+<PropsTable
+  rows={[
+    { name: "status", type: '"idle" | "loading" | "ready" | "error"', description: "Where the hosted form is in its life." },
+    { name: "canSubmit", type: "boolean", description: "Ready, valid, and not already submitting. Bind your button to this." },
+    { name: "isSubmitting", type: "boolean", description: "A tokenization request is in flight." },
+    { name: "hasErrors", type: "boolean", default: "true", description: "Finix's validation result for the whole form." },
+    { name: "submit", type: "(options?) => Promise<FinixSubmitResponse>", description: "Tokenize. Resolves with { token, ... }; rejects with FinixSdkError." },
+    { name: "submissionError", type: "FinixSdkError | null", description: "The last failed submit, until you clear it or submit again." },
+    { name: "clearSubmissionError", type: "() => void", description: "Reset submissionError." },
+    { name: "error", type: "FinixSdkError | null", description: "Mount or lifecycle failure." },
+    { name: "state", type: "FinixFormState", description: "Per-field flags (errors, dirty, focused). No card values." },
+    { name: "binInformation", type: "FinixBinInformation", description: "bin and cardBrand when Finix knows them." },
+    { name: "form", type: "PaymentFormInstance | null", description: "The underlying instance once ready." },
+    { name: "ref", type: "(el: HTMLDivElement | null) => void", description: "Only for useFinixPaymentForm: attach to your div." },
+  ]}
+/>
+
+## Helper hooks
+
+- `useFinixClient(config)` creates one `FinixClient` and keeps it stable across renders. Use it instead of `useMemo`.
+- `useFinixAppearance(appearance, "light" | "dark")` returns `{ appearance, instanceKey }` for the current color scheme. See [Appearance & theming](/docs/guides/appearance).
+
+## Options are frozen at mount
+
+The `options` you pass are used when the hosted form is created. Callbacks (`onChange`, `onSubmitResult`, and friends) always call your latest function, but other values (styles, `showAddress`, and so on) do not update a form that is already on the page. To recreate the form on purpose, change `instanceKey`:
+
+```tsx
+<FinixForm.Root client={client} options={options} instanceKey={attempt}>
+```
+
+In development, the SDK logs a warning if options change without a new `instanceKey`.
+
+## Server rendering
+
+Importing the package on the server is fine. Mounting is browser-only, so put the components in client components (`"use client"`). Calling `loadFinix()` on the server rejects with code `not_browser`.
+
+<Callout title="What headless means here">
+  Finix does not offer separate card-number, expiry, or CVC components. This SDK is headless around the form (you build everything except the fields), not inside it.
+</Callout>
+
+See the live [React headless](/docs/examples/react-headless) example and the [React reference](/docs/reference/react).

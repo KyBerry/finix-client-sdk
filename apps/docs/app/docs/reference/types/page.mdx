@@ -1,0 +1,38 @@
+export const metadata = {
+  title: "Types & constants",
+  description: "Exported constants and the types built from them.",
+};
+
+# Types & constants
+
+<p className="lead">Every constant is a readonly tuple you can iterate at runtime; the matching type is the union of its values.</p>
+
+| Constant | Type | Values |
+| --- | --- | --- |
+| `FINIX_ENVIRONMENTS` | `FinixEnvironment` | `"sandbox" | "prod"` |
+| `FINIX_AUTH_ENVIRONMENTS` | `FinixAuthEnvironment` | `"sandbox" | "live"` |
+| `FINIX_PAYMENT_METHODS` | `FinixPaymentMethod` | `"card" | "bank"` |
+| `FINIX_INSTRUMENT_TYPES` | `FinixInstrumentType` | `"PAYMENT_CARD" | "BANK_ACCOUNT" | "THIRD_PARTY_TOKEN"` |
+| `FINIX_THEMES` | `FinixTheme` | `"finix" | "amethyst" | "sapphire" | "topaz" | "ruby" | "emerald" | "midnight" | "elevated"` |
+| `FINIX_FIELD_IDS` | `FinixFieldId` | Every hosted field id. |
+| `FINIX_CARD_FIELD_IDS` | `FinixCardFieldId` | Card fields. |
+| `FINIX_BANK_FIELD_IDS` | none | Bank fields, including the Canadian `transit_number` and `institution_number`. |
+| `FINIX_ADDRESS_FIELD_IDS` | none | Address fields. |
+| `FINIX_REQUIRED_FIELD_IDS` | `FinixRequiredFieldId` | Fields you can mark required. |
+| `FINIX_SDK_ERROR_CODES` | `FinixSdkErrorCode` | See [Error codes](/docs/reference/errors). |
+
+## The types you will actually use
+
+- `FinixClientConfig`, `FinixPaymentFormOptions`, `FinixAsyncOptions`: see [FinixClient](/docs/reference/client).
+- `FinixSubmitResponse`: what `submit()` resolves with. `FinixTokenResponse` without the `token` shortcut is also exported.
+- `FinixSubmitResult`: what `onSubmitResult` receives. `{ ok: true, token, response, error: null }` or `{ ok: false, token: null, response: null, error }`.
+- `FinixChangeEvent`: what `onChange` receives. `{ state, binInformation, hasErrors }`.
+- `FinixHostedAppearance`, `FinixStyles`, `FinixStylesInput`, `FinixColorScheme`: see [Appearance helpers](/docs/reference/appearance).
+- `FinixFormState`, `FinixFieldState`, `FinixBinInformation`: per-field flags and card brand info. Never card values.
+- `FinixOnChange`, `FinixOnSubmitResult`, `FinixOnUpdate`, `FinixOnSubmit`, `FinixOnLoad`, `FinixOnError`: callback signatures.
+- `LoadFinixOptions`: see [loadFinix](/docs/reference/loader).
+- `finixTokenResponseSchema`, `finixTokenDataSchema`: the Zod schemas used to validate Finix's response, if you want them.
+
+<Callout>
+  Two upstream quirks worth knowing. Finix's docs say `hidePotentialIssueMessages` defaults to `true` but the runtime behaves as `false`; set it explicitly if you care. The Canadian bank fields `transit_number` and `institution_number` work in the hosted form but are missing from Finix's public field-id table; confirm in sandbox before launch.
+</Callout>
