@@ -1,0 +1,9 @@
+{
+  "extends": "@kyberry/typescript-config/base.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["next.config.ts", "tailwind.config.ts"]
+}

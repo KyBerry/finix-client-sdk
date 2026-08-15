@@ -1,1 +1,0 @@
-export { default } from "@kyberry/ui/postcss.config";

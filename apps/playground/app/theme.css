@@ -1,0 +1,90 @@
+/* Scheme resolution for the playground's token families.
+ *
+ * Components set only suffixed values inline (--*-light / --*-dark, plus
+ * scheme-invariant tokens like fonts and radii). These rules own the
+ * unsuffixed tokens every consumer reads — inline styles would otherwise
+ * outrank any stylesheet remap. `prefers-color-scheme` is also the media
+ * query Finix's hosted iframe uses for its `styles.dark` palette, so both
+ * sides of the frame boundary resolve from one source of truth. */
+
+.shell-frame {
+  --s-bg: var(--s-bg-light);
+  --s-ink: var(--s-ink-light);
+  --s-muted: var(--s-muted-light);
+  --s-line: var(--s-line-light);
+  --s-chip: var(--s-chip-light);
+  --s-red: var(--s-red-light);
+}
+
+.accent-scope {
+  --s-accent: var(--s-accent-light);
+}
+
+.merchant-stage {
+  --m-card: var(--m-card-light);
+  --m-card-border: var(--m-card-border-light);
+  --m-panel: var(--m-panel-light);
+  --m-panel-border: var(--m-panel-border-light);
+  --m-field: var(--m-field-light);
+  --m-field-border: var(--m-field-border-light);
+  --m-ink: var(--m-ink-light);
+  --m-ink-muted: var(--m-ink-muted-light);
+  --m-accent: var(--m-accent-light);
+  --m-accent-ink: var(--m-accent-ink-light);
+  --m-accent-soft: var(--m-accent-soft-light);
+  --m-danger: var(--m-danger-light);
+  --m-danger-ink: var(--m-danger-ink-light);
+  --m-danger-soft: var(--m-danger-soft-light);
+  --m-success: var(--m-success-light);
+  --m-success-ink: var(--m-success-ink-light);
+  --m-success-soft: var(--m-success-soft-light);
+  --m-ring: var(--m-ring-light);
+}
+
+.preset-chip {
+  --chip-accent: var(--chip-accent-light);
+  --chip-ink: var(--chip-ink-light);
+  --chip-card: var(--chip-card-light);
+}
+
+@media (prefers-color-scheme: dark) {
+  .shell-frame {
+    --s-bg: var(--s-bg-dark);
+    --s-ink: var(--s-ink-dark);
+    --s-muted: var(--s-muted-dark);
+    --s-line: var(--s-line-dark);
+    --s-chip: var(--s-chip-dark);
+    --s-red: var(--s-red-dark);
+  }
+
+  .accent-scope {
+    --s-accent: var(--s-accent-dark);
+  }
+
+  .merchant-stage {
+    --m-card: var(--m-card-dark);
+    --m-card-border: var(--m-card-border-dark);
+    --m-panel: var(--m-panel-dark);
+    --m-panel-border: var(--m-panel-border-dark);
+    --m-field: var(--m-field-dark);
+    --m-field-border: var(--m-field-border-dark);
+    --m-ink: var(--m-ink-dark);
+    --m-ink-muted: var(--m-ink-muted-dark);
+    --m-accent: var(--m-accent-dark);
+    --m-accent-ink: var(--m-accent-ink-dark);
+    --m-accent-soft: var(--m-accent-soft-dark);
+    --m-danger: var(--m-danger-dark);
+    --m-danger-ink: var(--m-danger-ink-dark);
+    --m-danger-soft: var(--m-danger-soft-dark);
+    --m-success: var(--m-success-dark);
+    --m-success-ink: var(--m-success-ink-dark);
+    --m-success-soft: var(--m-success-soft-dark);
+    --m-ring: var(--m-ring-dark);
+  }
+
+  .preset-chip {
+    --chip-accent: var(--chip-accent-dark);
+    --chip-ink: var(--chip-ink-dark);
+    --chip-card: var(--chip-card-dark);
+  }
+}
