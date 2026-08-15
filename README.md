@@ -2,6 +2,8 @@
 
 Typed browser and React bindings for the official [Finix.js v2](https://docs.finix.com/js) payment form.
 
+**Documentation and live examples:** https://kyberry.github.io/finix-client-sdk/
+
 > [!IMPORTANT]
 > This is an independent, unofficial open-source package. It is not maintained, endorsed, or certified by Finix. It loads Finix's hosted JavaScript and payment form; it does not replace the Finix SDK or make your integration PCI compliant by itself. Review Finix's current documentation and your own compliance requirements before going live.
 

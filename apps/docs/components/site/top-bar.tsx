@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { getSdkVersion } from "@/lib/sdk-version";
 
 const EXTERNAL_LINKS = [
-  { label: "Playground", href: "http://localhost:3000" },
+  // The playground only runs locally alongside the docs dev server.
+  ...(process.env.NODE_ENV === "development" ? [{ label: "Playground", href: "http://localhost:3000" }] : []),
   { label: "GitHub", href: "https://github.com/KyBerry/finix-client-sdk" },
   { label: "npm", href: "https://www.npmjs.com/package/@kyberry/finix-client-sdk" },
 ];

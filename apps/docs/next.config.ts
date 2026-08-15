@@ -8,8 +8,16 @@ const prettyCodeOptions: PrettyCodeOptions = {
   defaultLang: "ts",
 };
 
+// GitHub Pages serves the site from /<repo>/, so the static export needs a
+// base path. Local dev and Vercel-style hosts leave NEXT_PUBLIC_BASE_PATH unset.
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 const nextConfig: NextConfig = {
   pageExtensions: ["ts", "tsx", "mdx"],
+  output: "export",
+  trailingSlash: true,
+  images: { unoptimized: true },
+  ...(basePath ? { basePath, assetPrefix: basePath } : {}),
 };
 
 // Plugins are referenced by name so the options stay serializable for Turbopack.
