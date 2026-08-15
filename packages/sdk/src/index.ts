@@ -1,42 +1,67 @@
-/**
- * Finix SDK - Main entry point
- * Provides secure payment tokenization in the browser
- * Optimized for usage with React, Next.js and modern module systems
- *
- * IMPORTANT: This SDK is SSR-compatible but loads Sift Science
- * fraud detection on the client side. Some functionality will
- * only be available in browser environments.
- */
-
-// --- Core Creator ---
-export { PaymentFormCreator } from "@/creators/payment-form-creator";
-
-// --- Core Types ---
-export type {
-  // Configuration Types
-  EnvironmentConfig,
-  FormConfig,
-  // Core Enum/Union Types
-  FormType,
-  // Supporting Types for Configuration
-  StylesConfig,
-  FontConfig,
-  Placeholder,
-  FormCallbacks,
-  // State & Response Types
-  FieldState,
-  FormState, // Note: This is generic, might be complex for end-users
-  FinixTokenResponse,
-  // Field Name Types (might be useful for callbacks/state inspection)
-  FieldName,
-  CardFieldName,
-  BankFieldName,
-  AddressFieldName,
-  // Other related types if needed by consumers
-  // AvailableFieldNames, // Potentially too complex for direct export?
-  // HideableField,
-  // ... etc
-} from "@/types";
-
-// --- Constants ---
-export { FINIX_ENVIRONMENT } from "@/constants";
+export { createFinixAuth, FinixAuthSession } from "./auth";
+export {
+  defineFinixHostedAppearance,
+  defineFinixHostedAppearanceAdapter,
+  defineFinixPaymentFormOptions,
+  defineFinixStyles,
+  mergeFinixStyles,
+  normalizeFinixStyles,
+  resolveFinixAppearance,
+  type NormalizedFinixStyles,
+} from "./appearance";
+export { FinixClient } from "./client";
+export { FINIX_SDK_ERROR_CODES, FinixSdkError, type FinixSdkErrorCode } from "./errors";
+export { FINIX_SCRIPT_URL, loadFinix } from "./loader";
+export { PaymentFormInstance } from "./payment-form";
+export { finixTokenDataSchema, finixTokenResponseSchema } from "./schemas";
+export {
+  FINIX_ADDRESS_FIELD_IDS,
+  FINIX_AUTH_ENVIRONMENTS,
+  FINIX_BANK_FIELD_IDS,
+  FINIX_CARD_FIELD_IDS,
+  FINIX_ENVIRONMENTS,
+  FINIX_FIELD_IDS,
+  FINIX_INSTRUMENT_TYPES,
+  FINIX_PAYMENT_METHODS,
+  FINIX_REQUIRED_FIELD_IDS,
+  FINIX_THEMES,
+  type FinixAsyncOptions,
+  type FinixAuthConfig,
+  type FinixAuthEnvironment,
+  type FinixBinInformation,
+  type FinixCardFieldId,
+  type FinixChangeEvent,
+  type FinixClientConfig,
+  type FinixColorScheme,
+  type FinixCssProperties,
+  type FinixDefaultableFieldId,
+  type FinixEnvironment,
+  type FinixFieldId,
+  type FinixFieldState,
+  type FinixFont,
+  type FinixFormState,
+  type FinixHostedAppearance,
+  type FinixHideableFieldId,
+  type FinixInstrumentType,
+  type FinixOnChange,
+  type FinixOnError,
+  type FinixOnLoad,
+  type FinixOnSubmit,
+  type FinixOnSubmitResult,
+  type FinixOnUpdate,
+  type FinixPaymentFormOptions,
+  type FinixPaymentMethod,
+  type FinixPaymentMethods,
+  type FinixPlaidLinkSettings,
+  type FinixRequiredFieldId,
+  type FinixStyleStates,
+  type FinixStyles,
+  type FinixStylesInput,
+  type FinixSubmitResponse,
+  type FinixSubmitResult,
+  type FinixTheme,
+  type FinixThemeStyles,
+  type FinixTokenData,
+  type FinixTokenResponse,
+  type LoadFinixOptions,
+} from "./types";

@@ -1,0 +1,15 @@
+{
+  "extends": "@kyberry/typescript-config/base.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": [
+    "../eslint-config/vendor.d.ts",
+    "eslint.config.ts",
+    "vite.config.mts",
+    "vitest.config.mts",
+    "scripts/**/*.ts"
+  ]
+}

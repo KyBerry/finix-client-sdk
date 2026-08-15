@@ -3,6 +3,7 @@ import path from "path";
 
 export default defineConfig({
   test: {
+    allowOnly: false,
     globals: true, // Use Vitest's global APIs
     environment: "jsdom", // Simulate a browser environment
     setupFiles: [], // Add setup files if needed (e.g., polyfills)
@@ -10,6 +11,12 @@ export default defineConfig({
       provider: "v8", // or 'istanbul'
       reporter: ["text", "json", "html"], // Coverage report formats
       reportsDirectory: "./coverage", // Output directory for reports
+      thresholds: {
+        statements: 85,
+        branches: 80,
+        functions: 90,
+        lines: 85,
+      },
       include: ["src/**/*"], // Files to include in coverage
       exclude: [
         // Files/patterns to exclude
