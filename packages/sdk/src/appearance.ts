@@ -19,7 +19,7 @@ const SUBMIT_BUTTON_STATES = ["default", "disabled"] as const;
 type ExactHostedAppearance<Appearance extends FinixHostedAppearance> = Appearance &
   Record<Exclude<keyof Appearance, keyof FinixHostedAppearance>, never>;
 
-const STYLE_MODES = ["default", "dark"] as const;
+type StyleMode = "default" | "dark";
 const STYLE_TARGETS = ["form", "input", "sectionHeader", "section", "submitButton"] as const;
 
 /**
@@ -27,7 +27,7 @@ const STYLE_TARGETS = ["form", "input", "sectionHeader", "section", "submitButto
  * keyed by mode is returned as-is.
  */
 export type NormalizedFinixStyles<Styles extends FinixStylesInput> =
-  Extract<keyof Styles, (typeof STYLE_MODES)[number]> extends never ? { default: Styles } : Styles;
+  Extract<keyof Styles, StyleMode> extends never ? { default: Styles } : Styles;
 
 function isBareThemeStyles(styles: FinixStylesInput): styles is FinixThemeStyles {
   // An empty object is also "bare" so runtime matches NormalizedFinixStyles<{}>.
@@ -174,6 +174,7 @@ export function resolveFinixAppearance<const Appearance extends FinixHostedAppea
 ): Omit<Appearance, "styles" | "enableDarkMode"> & { styles?: FinixStyles; enableDarkMode: boolean } {
   validateHostedAppearance(appearance);
   const { styles, enableDarkMode: _ignored, ...rest } = appearance;
+  void _ignored;
   const dark = scheme === "dark";
   const flattened = styles
     ? mergeFinixStyles({ default: styles.default }, dark ? { default: styles.dark } : undefined)
